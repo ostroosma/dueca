@@ -64,6 +64,24 @@ DCOReader::DCOReader(const char* classname, ChannelReadToken &token,
   ts_request(ts)
 { access(); }
 
+DCOReader::DCOReader(ChannelReadToken &token, const DataTimeSpec& ts) :
+  CommObjectReader(token.getEntryDataClassName().c_str(), NULL),
+  token(token),
+  ts_request(ts.getValidityStart())
+{ access(); }
+
+DCOReader::DCOReader(ChannelReadToken &token, const TimeSpec& ts) :
+  CommObjectReader(token.getEntryDataClassName().c_str(), NULL),
+  token(token),
+  ts_request(ts.getValidityStart())
+{ access(); }
+
+DCOReader::DCOReader(ChannelReadToken &token, TimeTickType ts) :
+  CommObjectReader(token.getEntryDataClassName().c_str(), NULL),
+  token(token),
+  ts_request(ts)
+{ access(); }
+
 DCOReader::~DCOReader()
 {
   if (obj) {
