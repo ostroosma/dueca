@@ -224,11 +224,22 @@ GtkWidget *GtkGladeWindow::operator[](const char *wname) const
   return NULL;
 }
 
-GObject *GtkGladeWindow::getObject(const char *wname) const
+GObject *GtkGladeWindow::getObject(const char *wname, bool warn) const
 {
+  GObject *res = NULL;
   if (builder)
-    return gtk_builder_get_object(builder, wname);
-  return NULL;
+    res = gtk_builder_get_object(builder, wname);
+
+  if (warn && !res) {
+    /* DUECA graphics.
+
+       When trying to set a value in the interface, the widget name
+       was not found. This may be a typo in your ui definition, or incidental.
+    */
+    W_XTR("GtkGladeWindow: Could not find gtk object with id \"" << wname
+                                                                 << "\"");
+  }
+  return res;
 }
 
 void GtkGladeWindow::show(const char *widget)
@@ -255,20 +266,9 @@ void GtkGladeWindow::hide(const char *widget)
 
 bool GtkGladeWindow::_setValue(const char *wname, double value, bool warn)
 {
-  GObject *o = getObject(wname);
-  if (o == NULL) {
-    if (warn) {
-      /* DUECA graphics.
-
-         When trying to set a value in the interface, the widget name
-         corresponding to the DCO member name was not found. This may
-         be a typo in your ui definition, or incidental.
-      */
-      W_XTR("GtkGladeWindow::setValue: Could not find gtk object with id \""
-            << wname << "\"");
-    }
+  GObject *o = getObject(wname, warn);
+  if (o == NULL)
     return false;
-  }
 
   // try 1, adjustment
   if (GTK_IS_ADJUSTMENT(o)) {
@@ -432,24 +432,13 @@ const char *_findValueFromIndex(const GtkGladeWindow::OptionMapping *mapping,
   return gtk_string_list_get_string(model, idx);
 }
 
-
 bool GtkGladeWindow::_fillOptions(const char *wname, ElementWriter &writer,
                                   ElementReader &reader,
                                   const OptionMapping *mapping, bool warn)
 {
-  GObject *o = getObject(wname);
-  if (o == NULL) {
-    if (warn) {
-      /* DUECA graphics.
-
-         Cannot find the given object; check whether it is in the interface,
-         or check for spelling errors.
-      */
-      W_XTR("GtkGladeWindow::fillOptions: Could not find gtk object with id \""
-            << wname << "\"");
-    }
+  GObject *o = getObject(wname, warn);
+  if (o == NULL)
     return false;
-  }
 
   if (GTK_IS_DROP_DOWN(o)) {
 
@@ -480,20 +469,9 @@ bool GtkGladeWindow::_fillOptions(const char *wname, ElementWriter &writer,
 
 bool GtkGladeWindow::_setValue(const char *wname, const char *value, bool warn)
 {
-  GObject *o = getObject(wname);
-  if (o == NULL) {
-    if (warn) {
-      /* DUECA graphics.
-
-         When trying to set a value in the interface, the widget name
-         corresponding to the DCO member name was not found. This may
-         be a typo in your ui definition, or incidental.
-      */
-      W_XTR("GtkGladeWindow::setValue: Could not find gtk object with id \""
-            << wname << "\"");
-    }
+  GObject *o = getObject(wname, warn);
+  if (o == NULL)
     return false;
-  }
 
   if (GTK_IS_DROP_DOWN(o)) {
 
@@ -540,20 +518,9 @@ bool GtkGladeWindow::_setValue(const char *wname, const char *value, bool warn)
 
 bool GtkGladeWindow::_setValue(const char *wname, bool value, bool warn)
 {
-  GObject *o = getObject(wname);
-  if (o == NULL) {
-    if (warn) {
-      /* DUECA graphics.
-
-         When trying to set a value in the interface, the widget name
-         corresponding to the DCO member name was not found. This may
-         be a typo in your ui definition, or incidental.
-       */
-      W_XTR("GtkGladeWindow::setValue: Could not find gtk object with id \""
-            << wname << "\"");
-    }
+  GObject *o = getObject(wname, warn);
+  if (o == NULL)
     return false;
-  }
 
   if (GTK_IS_TOGGLE_BUTTON(o)) {
     GtkToggleButton *t = GTK_TOGGLE_BUTTON(o);
@@ -578,14 +545,10 @@ bool GtkGladeWindow::_setValue(const char *wname, bool value, bool warn)
   return false;
 }
 
-bool GtkGladeWindow::_setValue(const char *wname, const CommObjectReader &cor,
-                               unsigned im, boost::any &b, bool warn)
+bool GtkGladeWindow::_setValue(const char *wname, const char *mname,
+                               boost::any &b, bool warn)
 {
-  if (cor.getMemberAccessor(im).isEnum() &&
-      _setRadiosFromEnum(wname, cor, im, b, false)) {
-    return true;
-  }
-  else if (b.type() == typeid(double)) {
+  if (b.type() == typeid(double)) {
     return _setValue(wname, boost::any_cast<double>(b), warn);
   }
   else if (b.type() == typeid(float)) {
@@ -633,28 +596,27 @@ bool GtkGladeWindow::_setValue(const char *wname, const CommObjectReader &cor,
 
        Could not interpret the data of a DCO member */
     W_XTR("GtkGladeWindow::setValue: could not interpret type of member "
-          << cor.getMemberName(im));
+          << mname);
   }
   return false;
+}
+
+bool GtkGladeWindow::_setValue(const char *wname, const CommObjectReader &cor,
+                               unsigned im, boost::any &b, bool warn)
+{
+  if (cor.getMemberAccessor(im).isEnum() &&
+      _setRadiosFromEnum(wname, cor, im, b, false)) {
+    return true;
+  }
+  return _setValue(wname, cor.getMemberName(im), b, warn);
 }
 
 template <class T>
 bool GtkGladeWindow::__getValue(const char *wname, boost::any &b, bool warn)
 {
-  GObject *o = getObject(wname);
-  if (o == NULL) {
-    if (warn) {
-      /* DUECA graphics.
-
-         When trying to get a value from the interface, the widget name
-         corresponding to the DCO member name was not found. This may
-         be a typo in your ui definition, or incidental.
-      */
-      W_XTR("GtkGladeWindow::getValue: Could not find gtk object with id \""
-            << wname << "\"");
-    }
+  GObject *o = getObject(wname, warn);
+  if (o == NULL)
     return false;
-  }
 
   // try 1, adjustment
   if (GTK_IS_ADJUSTMENT(o)) {
@@ -716,20 +678,9 @@ template <>
 bool GtkGladeWindow::__getValue<bool>(const char *wname, boost::any &b,
                                       bool warn)
 {
-  GObject *o = getObject(wname);
-  if (o == NULL) {
-    if (warn) {
-      /* DUECA graphics.
-
-         When trying to get a value from the interface, the widget name
-         corresponding to the DCO member name was not found. This may
-         be a typo in your ui definition, or incidental.
-      */
-      W_XTR("GtkGladeWindow::getValue: Could not find gtk object with id \""
-            << wname << "\"");
-    }
+  GObject *o = getObject(wname, warn);
+  if (o == NULL)
     return false;
-  }
 
   if (GTK_IS_TOGGLE_BUTTON(o)) {
     b = bool(gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(o)));
@@ -755,20 +706,9 @@ template <>
 bool GtkGladeWindow::__getValue<std::string>(const char *wname, boost::any &b,
                                              bool warn)
 {
-  GObject *o = getObject(wname);
-  if (o == NULL) {
-    if (warn) {
-      /* DUECA graphics.
-
-         When trying to get a value from the interface, the widget name
-         corresponding to the DCO member name was not found. This may
-         be a typo in your ui definition, or incidental.
-      */
-      W_XTR("GtkGladeWindow::getValue: Could not find gtk object with id \""
-            << wname << "\"");
-    }
+  GObject *o = getObject(wname, warn);
+  if (o == NULL)
     return false;
-  }
 
   if (GTK_IS_DROP_DOWN(o)) {
     auto mapping =

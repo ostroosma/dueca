@@ -53,6 +53,16 @@ public:
   */
   CommObjectReader(const char *classname, const void *obj = NULL);
 
+  /** Templated constructor.
+
+      @param obj       Object to be read.
+  */
+  template <typename T>
+  CommObjectReader(T &obj) :
+    CommObjectReaderWriter(getclassname<T>()),
+    obj(&obj)
+  {}
+
   /** Return an element accessor based on the element name
 
       @param ename     Name of the data member  */
