@@ -959,10 +959,10 @@ bool GtkGladeWindow::_setRadiosFromEnum(const char *gtkid,
 
        Could not find radio buttons (=linked checkbuttons) with naming to match
        a given enum. The base name must match the given dco object name, the
-       enum value must be coded after a colon. Example:
-       "prefix_dcomembername:One", "prefix_dcomembername:Two", if One, Two are
-       the enum values, etc.
-    */
+       enum value must be coded after a dash. Example:
+       "prefix_dcomembername-One", "prefix_dcomembername-Two", if One, Two are
+       the enum values, and "prefix_%s" was your format.
+      */
     W_XTR("GtkGladeWindow::getValues, no match for enum to radio button");
   }
   return false;

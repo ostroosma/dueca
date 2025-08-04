@@ -268,6 +268,24 @@ struct GladeCallbackTable
       ID's "myui_button[0]", "myui_button[1]", etc., to elements in an
       array in the DCO object named "button"
 
+
+  Some of the possible mappings between DCO members types and gtk3 widgets are:
+    
+    | Data type      | Widgets                                            |
+    | -------------- | ---------------------------------------------------|
+    | float, double  | GtkAdjustment, GtkRange, GtkSpinButton, GtkEntry   |
+    | int, long, short | as for float                                     |
+    | unsigned int, long, short | as for float                            |
+    | std::string    | GtkComboBox, GtkEntry, GtkFileChooser              |
+    | bool           | GtkToggleButton                                    | 
+    | enum           | GtkDropDown, GtkRadioButton       |
+
+  To set a choice for an enum value with GtkRadioButtons, give
+  the buttons the proper names (suffixed with "-enumvalue").
+
+  These setting and getting actions that you can do with DCO objects, are
+  also available for simple variables (float, double, integer types, std::string), 
+  through the setValue and getValue calls. 
  */
 class GtkGladeWindow
 {
@@ -311,12 +329,17 @@ class GtkGladeWindow
   bool _setValue(const char *wname, const char *mname, boost::any &b,
                  bool warn);
 
+  /** Helper, set any value on a widget, checks for enums in radios and
+      dropdowns */
+  bool _setValue(const char *wname, const CommObjectReader &cor, unsigned im,
+                 boost::any &b, bool warn);
+
   /** Helper, get a state from a widget */
   template <class T>
   bool __getValue(const char *wname, boost::any &alue, bool warn);
 
   /** Helper, get any value from a widget */
-  bool _getValue(const char *wname, const char *mname, const char *klass,
+  bool _getValue(const char *wname, const CommObjectWriter &cor, unsigned im,
                  boost::any &b, bool warn);
 
 public:
@@ -441,6 +464,14 @@ private:
   bool _fillOptions(const char *wname, ElementWriter &writer,
                     ElementReader &reader, const OptionMapping *mapping,
                     bool warn);
+
+  /** Helper for enum to radio mapping */
+  bool _getEnumFromRadios(const char *gtkid, const CommObjectWriter &dco,
+                          unsigned im, boost::any &b, bool warn);
+
+  /** Helper for enum to radio mapping */
+  bool _setRadiosFromEnum(const char *gtkid, const CommObjectReader &dco,
+                          unsigned im, boost::any &b, bool warn);
 
 public:
   /** Use the enum items in a DCO object to fill combobox tree models
@@ -670,7 +701,8 @@ bool GtkGladeWindow::getValue(T &value, const char *name, bool warn)
 {
   boost::any _v;
   auto res = __getValue<T>(name, _v, warn);
-  value = boost::any_cast<T>(_v);
+  if (res)
+    value = boost::any_cast<T>(_v);
   return res;
 }
 

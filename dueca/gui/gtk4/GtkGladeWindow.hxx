@@ -216,7 +216,7 @@ struct GladeCallbackTable
     - Set the options for the DropDown based on the enum values, or --
       when using a mapping table -- have descriptive names instead of the
       enum values.
-    - Set the data from the "a" and "command" members into the interface
+    - Set the data from the "a" and "command" members into the interface.
     - Convert data from the interface to the "a" and "command" members.
 
     As an example, for a glade window with a SpinButton named
@@ -285,6 +285,24 @@ struct GladeCallbackTable
       e.g., an array format like "myui_%s[%d]" enables you to link widgets
       with ID's "myui_button[0]", "myui_button[1]", etc., to elements in an
       array in the DCO object named "button"
+
+    Some of the possible mappings between DCO members types and gtk4 widgets are:
+    
+    | Data type      | Widgets                                            |
+    | -------------- | ---------------------------------------------------|
+    | float, double  | GtkAdjustment, GtkRange, GtkSpinButton, GtkEntry, GtkDropDown |
+    | int, long, short | as for float                                     |
+    | unsigned int, long, short | as for float                            |
+    | std::string    | GtkDropDown, GtkEntry, GtkFileChooser              |
+    | bool           | GtkToggleButton                                    | 
+    | enum           | GtkDropDown, GtkCheckButton (in radio group)       |
+
+  To set a choice for an enum value with GtkCheckButtons in a radio group, give
+  the buttons the proper names (suffixed with "-enumvalue").
+
+  These setting and getting actions that you can do with DCO objects, are
+  also available for simple variables (float, double, integer types, std::string), 
+  through the setValue and getValue calls. 
 
  */
 class GtkGladeWindow
@@ -696,7 +714,8 @@ bool GtkGladeWindow::getValue(T &value, const char *name, bool warn)
 {
   boost::any _v;
   auto res = __getValue<T>(name, _v, warn);
-  value = boost::any_cast<T>(_v);
+  if (res)
+    value = boost::any_cast<T>(_v);
   return res;
 }
 
