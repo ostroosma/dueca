@@ -321,6 +321,11 @@ bool GtkGladeWindow::_setValue(const char *wname, const char *value, bool warn)
     }
   }
 
+  // service for labels
+  if (GTK_IS_LABEL(o)) {
+    gtk_label_set_text(GTK_LABEL(o), value);
+  }
+
   if (warn) {
     /* DUECA graphics.
 
@@ -531,6 +536,11 @@ bool GtkGladeWindow::__getValue<std::string>(const char *wname, boost::any &b,
 
     // when here, no file object or empty, return empty string
     b = std::string();
+    return true;
+  }
+
+  if (GTK_IS_LABEL(o)) {
+    b = std::string(gtk_label_get_text(GTK_LABEL(o)));
     return true;
   }
 
@@ -1005,6 +1015,14 @@ bool GtkGladeWindow::fillOptions(const char *dcoclass, const char *format,
   converter->delData(object);
 
   return true;
+}
+
+template <>
+bool GtkGladeWindow::setValue<char *>(char *const &value, const char *name,
+                                      bool warn)
+{
+  auto res = _setValue(name, value, warn);
+  return res;
 }
 
 DUECA_NS_END

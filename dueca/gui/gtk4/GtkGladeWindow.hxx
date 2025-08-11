@@ -286,23 +286,23 @@ struct GladeCallbackTable
       with ID's "myui_button[0]", "myui_button[1]", etc., to elements in an
       array in the DCO object named "button"
 
-    Some of the possible mappings between DCO members types and gtk4 widgets are:
-    
+    Some of the possible mappings between DCO members types and gtk4 widgets
+  are:
+
     | Data type      | Widgets                                            |
     | -------------- | ---------------------------------------------------|
-    | float, double  | GtkAdjustment, GtkRange, GtkSpinButton, GtkEntry, GtkDropDown |
-    | int, long, short | as for float                                     |
-    | unsigned int, long, short | as for float                            |
-    | std::string    | GtkDropDown, GtkEntry, GtkFileChooser              |
-    | bool           | GtkToggleButton                                    | 
+    | float, double  | GtkAdjustment, GtkRange, GtkSpinButton, GtkEntry,
+  GtkDropDown | | int, long, short | as for float | | unsigned int, long, short
+  | as for float                            | | std::string    | GtkDropDown,
+  GtkEntry, GtkFileChooser              | | bool           | GtkToggleButton |
     | enum           | GtkDropDown, GtkCheckButton (in radio group)       |
 
   To set a choice for an enum value with GtkCheckButtons in a radio group, give
   the buttons the proper names (suffixed with "-enumvalue").
 
   These setting and getting actions that you can do with DCO objects, are
-  also available for simple variables (float, double, integer types, std::string), 
-  through the setValue and getValue calls. 
+  also available for simple variables (float, double, integer types,
+  std::string), through the setValue and getValue calls.
 
  */
 class GtkGladeWindow
@@ -550,7 +550,7 @@ public:
 
   /** Retrieve a single value from the interface into a compatible object.
 
-      @param obj object
+      @param obj object.
       @param name Widget name.
       @param warn Print warning when object not found or incompatible.
       @tparam T  Type of the object
@@ -561,7 +561,7 @@ public:
 
   /** Set a single value into the interface into a compatible object.
 
-      @param obj object
+      @param obj object.
       @param name Widget name.
       @param warn Print warning when object not found or incompatible.
       @tparam T  Type of the object
@@ -718,6 +718,10 @@ bool GtkGladeWindow::getValue(T &value, const char *name, bool warn)
     value = boost::any_cast<T>(_v);
   return res;
 }
+
+template <>
+bool GtkGladeWindow::setValue<char *>(char *const &value, const char *name,
+                                      bool warn);
 
 //
 template <typename T>

@@ -8,13 +8,13 @@ The gtk3 interfacing library is still well supported, and you can use the "glade
 
 The fourth version of the gtk toolkit, gtk4, looks a lot like later versions gtk3, but there are a number of important changes:
 
-- In gtk4, *almost everything* is a normal widget, except for the menu system. Gtk3 still had different types of widgets for the toolbar (ToolButton, RadioToolButton, etc.). Gtk4 removed all of this stuff, and if you want a toolbar, just use a normal box, with normal widgets, and give the box a "toolbar" style. 
+- In gtk4, *almost everything* is a normal widget, except for the menu system. Gtk3 still had different types of widgets for the toolbar (ToolButton, RadioToolButton, etc.). Gtk4 removed all of this stuff, and if you want a toolbar, just use a normal box, with normal widgets, and give the box a "toolbar" style.
 
-- The same thing happened for "list" views and "tree" views. In gtk3, you can use a `GtkTreeView` to show data in a list with tree expansion. To provide data for this view, the data has to be copied to a "tree model", which could hold typical types of data (strings, numbers), in a table format. In gtk4 all that is gone. You no longer need to copy your data into a gtk-compatible table, instead you need to create a "factory", that in its turn creates widgets (normal widgets) to be shown in the table, and can link the data in those widgets to the data in your program. It looks a bit complicated (and examples are still scarce), so I added a section to this documentation that lays this process out step-by-step. 
+- The same thing happened for "list" views and "tree" views. In gtk3, you can use a `GtkTreeView` to show data in a list with tree expansion. To provide data for this view, the data has to be copied to a "tree model", which could hold typical types of data (strings, numbers), in a table format. In gtk4 all that is gone. You no longer need to copy your data into a gtk-compatible table, instead you need to create a "factory", that in its turn creates widgets (normal widgets) to be shown in the table, and can link the data in those widgets to the data in your program. It looks a bit complicated (and examples are still scarce), so I added a section to this documentation that lays this process out step-by-step.
 
-- Another big change is the menu system. In gtk4 you can easily define a menu by its layout. However it won't do anything until you connected your menu items to "activities". The way in which you connect these items determines whether your menu items are shown as normal selections, have checkboxes to be toggled, indicating the state of the menu, or function like radio buttons in that you can select and activate one option from a number of possible choices. Another section lays out step-by-step instructions for that as well. 
+- Another big change is the menu system. In gtk4 you can easily define a menu by its layout. However it won't do anything until you connected your menu items to "activities". The way in which you connect these items determines whether your menu items are shown as normal selections, have checkboxes to be toggled, indicating the state of the menu, or function like radio buttons in that you can select and activate one option from a number of possible choices. Another section lays out step-by-step instructions for that as well.
 
-- The old and trusty "glade" program is not updated to gtk4, and its alternatives are either not complete yet ("Cambalache"), or work in a slightly different way ("Workbench"). I will outline the use of Workbench for building user interfaces. 
+- The old and trusty "glade" program is not updated to gtk4, and its alternatives are either not complete yet ("Cambalache"), or work in a slightly different way ("Workbench"). I will outline the use of Workbench for building user interfaces.
 
 ## Workbench
 
@@ -22,7 +22,7 @@ You can install workbench by Sonny Piers using flatpack:
 
     flatpak install flathub re.sonny.Workbench
 
-Run it using 
+Run it using
 
     flatpak run re.sonny.Workbench
 
@@ -30,13 +30,13 @@ Workbench lets you create an interface specification with a simple script editor
 
 Ctrl-N will give you a new project, Ctrl-O gives a window to open an existing project. Each project is in its own folder, so you need a folder for each graphical interface you want to create. There are a number of files created in such a folder:
 
-- `main.blp` This is the "BluePrint" format file for defining your interface. The BluePrint format is really compact, and this is the main way in which you type up your interface. Create widgets and give them properties (and data, if applicable); Workbench will check whether the syntax and writing are correct. 
+- `main.blp` This is the "BluePrint" format file for defining your interface. The BluePrint format is really compact, and this is the main way in which you type up your interface. Create widgets and give them properties (and data, if applicable); Workbench will check whether the syntax and writing are correct.
 
 - `main.ui` A direct translation of everything in `main.blp` (given that your syntax is correct), to an xml format that can be interpreted by the gtk builder. This file will be used by your program.
 
 - `settings` and `jsconfig.json`, two additional files used by Workbench.
 
-When using Workbench, check its library for examples. These examples give you an idea of what is possible, and how to implement many common interface elements. You can ask for a live preview of your interface, and see how it works.  
+When using Workbench, check its library for examples. These examples give you an idea of what is possible, and how to implement many common interface elements. You can ask for a live preview of your interface, and see how it works.
 
 ## Showing an interface
 
@@ -71,7 +71,7 @@ bool ExperimentInterface::complete()
 }
 ~~~~
 
-Of course, now you have the window, but what can you do with it? For that, read the next section. 
+Of course, now you have the window, but what can you do with it? For that, read the next section.
 
 ## Simple button linking
 
@@ -81,7 +81,7 @@ The widgets that you use in your interface all have their own possibilities to r
 using Gtk 4.0;
 
 Window mainwindow {
-  
+
   title: "An experiment interface";
 
   Box {
@@ -123,7 +123,7 @@ Instead of opening the window without further ado, we will use a callback table 
 ~~~~{.cxx}
 bool ExperimentInterface::complete()
 {
-  // table linking widget signals to code. 
+  // table linking widget signals to code.
   static GladeCallbackTable cb_links[] = {
     { "my_button", "clicked", gtk_callback(&_ThisModule_::cbMyButton) },
     // IT HAS TO BE CLOSED OFF WITH NULL!
@@ -195,21 +195,21 @@ void ExperimentInterface::cbMyButton(GtkButton* button, gpointer user_data)
 }
 ~~~~
 
-Some explanation on how this works might be in order. The `DCOWriter` object works as the `DataWriter` you should be familiar with, however it can write the `ExpCondition` object without actually knowing what an `ExpCondition` object is, through introspection. This writer is given to the `eciwindow`'s `getValues` call. This call inspects both the DCO object and the interface, and then tries to fill all "matching" members of the DCO object, in this case an `ExpCondition`. 
+Some explanation on how this works might be in order. The `DCOWriter` object works as the `DataWriter` you should be familiar with, however it can write the `ExpCondition` object without actually knowing what an `ExpCondition` object is, through introspection. This writer is given to the `eciwindow`'s `getValues` call. This call inspects both the DCO object and the interface, and then tries to fill all "matching" members of the DCO object, in this case an `ExpCondition`.
 
-The `"eci_%s"` string specifies the format for looking for widgets. It will be combined with the name of the members in the DCO object (in this case the single member of the `ExpCondition`), here resulting in `"eci_participantid"`. That is the name of the `GtkEntry` widget, so that will be matched, and the text found in the `GtkEntry` widget will be written in the `ExpCondition` object that will be sent off over the channel linked to `w_expcond`. By using a prefix (in this case "eci_"), we can avoid confusion with names of other widgets, and it will also be possible to extract multiple identical DCO object from the interface, as long as different prefixes are used in naming the widgets. 
+The `"eci_%s"` string specifies the format for looking for widgets. It will be combined with the name of the members in the DCO object (in this case the single member of the `ExpCondition`), here resulting in `"eci_participantid"`. That is the name of the `GtkEntry` widget, so that will be matched, and the text found in the `GtkEntry` widget will be written in the `ExpCondition` object that will be sent off over the channel linked to `w_expcond`. By using a prefix (in this case "eci_"), we can avoid confusion with names of other widgets, and it will also be possible to extract multiple identical DCO object from the interface, as long as different prefixes are used in naming the widgets.
 
 It is also possible to work the other way, with a `setValues` call, and set values from a DCO object in the interface. For a short overview of what types of data can be matched to what types of widgets, see the table below:
 
-| data type   | widgets                                                          |
-| ----------- | -----------------------------------------------------------------|
-| std::string | GtkEntry, GtkDropDown                                            |
-| double      | GtkEntry, GtkSpinButton, GtkDropDown (with numbers), GtkRange    |
-| float       | GtkEntry, GtkSpinButton, GtkDropDown (with numbers), GtkRange    |
-| int8_t..int64_t | GtkEntry, GtkSpinButton, GtkDropDown (with numbers), GtkRange    |
-| uint8_t..uint64_t  | GtkEntry, GtkSpinButton, GtkDropDown (with numbers), GtkRange    |
-| enum        | GtkDropDown (with enum values), GtkCheckButton (as radiobutton)  |
-| bool        | GtkCheckButton, GtkToggleButton                                  |
+| data type         | widgets                                                         |
+| ----------------- | --------------------------------------------------------------- |
+| std::string       | GtkEntry, GtkDropDown                                           |
+| double            | GtkEntry, GtkSpinButton, GtkDropDown (with numbers), GtkRange   |
+| float             | GtkEntry, GtkSpinButton, GtkDropDown (with numbers), GtkRange   |
+| int8_t..int64_t   | GtkEntry, GtkSpinButton, GtkDropDown (with numbers), GtkRange   |
+| uint8_t..uint64_t | GtkEntry, GtkSpinButton, GtkDropDown (with numbers), GtkRange   |
+| enum              | GtkDropDown (with enum values), GtkCheckButton (as radiobutton) |
+| bool              | GtkCheckButton, GtkToggleButton                                 |
 
 The GtkDropDown widgets can be loaded with values with the `loadDropDownText` call, for example to load a dropdown box with names of experimental conditions. The `fillOptions` text call can be used to fill dropdowns with all possible enum values.
 
@@ -234,23 +234,124 @@ Linking an enum to a group of radio buttons needs some special preparation. In g
 
 This would assume an prefix of `eci_`, then an enum in the `option` member of your DCO which can have values `Default`, `HiGain` and `EasyDoesIt`. Depending on which of these radio buttons is the currently active one, the enum value will be set.
 
+## Loose ends, getting or settina a single value
+
+You do not always have to use a DCO object to get data from the interface, although in many cases it is by far the most efficient options. For loose ends, such as single floating point or integer values, or simple strings, you can use the (templated) dueca::GtkGladeWindow::setValue and dueca::GtkGladeWindow::getValue call. Given the eciwindow as used above, you could for example do:
+
+~~~~{.cxx}
+  // seting the data
+  eciwindow.setValue("", "eci_participantID");
+  eciwindow.setValue(0, "my_count");
+
+  // or getting it
+  std::string participant;
+  eciwindow.getValue(participant, "eci_participantID");
+~~~~
 
 ## Making a menu
 
-In gtk4, menus are shown by specific widgets, such as the MenuButton, or attached to the whole application. The items in 
-menus must be linked to actions to be enabled. 
+In gtk4, menus are shown by specific widgets, such as the MenuButton, or attached to the whole application. The items in menus must be linked to actions to be enabled.
 
-Further details for this section to be written.
+With Workbench, you can add a PopoverMenuBar or a MenuButton to your interface, which you can link to a menu that you define
+
+~~~~{.blp}
+using Gtk 4.0;
+
+Window menuwindow {
+  title: "show menubar";
+
+  Box {
+    PopoverMenuBar mybar {
+      menu-model: main_menu;
+    }
+  }
+}
+
+menu main_menu {
+  submenu {
+    label: _("File");
+
+    section {
+      item {
+        label: _("New File");
+        action: "app.newfile";
+      }
+
+      item {
+        label: _("Open File");
+        action: "app.openfile";
+      }
+    }
+
+    item {
+      label: _("Run");
+      action: "app.do_run";
+    }
+  }
+  submenu {
+    label: _("Options");
+
+    item {
+      label: _("First");
+      action: "app.chooseoptions::1";
+    }
+
+    item {
+      label: _("Second");
+      action: "app.chooseoptions::2";
+    }
+
+    item {
+      label: _("Third");
+      action: "app.chooseoptions::3";
+    }
+  }
+}
+~~~~
 
 ### Normal menu item
 
+Within your program, you need to create the actions ("app.newfile", etc.) and connect them to a callback. Menu items that are connected produce the activate signal. We can re-use a gtk callback table structure, and do something like:
+
+~~~~{.cxx}
+
+  // table with data
+  static GladeCallbackTable actions[] = {
+    {"newfile", "activate", gtk_callback(&MyModule::newFile)},
+    ....
+  };
+
+  // create, connect and install the actions
+  for (const auto &a : actions) {
+
+    auto action = g_simple_action_new(a.widget, NULL);
+    g_signal_connect(action, a.signal, G_CALLBACK(a.func->callback()), a.func);
+
+    // add the action to the application?
+    g_action_map_add_action(G_ACTION_MAP(GtkHandler::application()),
+                            G_ACTION(action));
+  }
+~~~~
+
 ### Toggle/checkbox type
+
+If you want to use checkbox or radio selection functionality, your actions need to
+have a boolean state, using the `g_simple_action_new_stateful` call, for example:
+
+~~~~{.cxx}
+  auto initoff = g_variant_new_boolean(FALSE);
+  auto action = g_simple_action_new_stateful(a.widget, NULL, initoff);
+
+  // and add to action map
+~~~~
 
 ### Radiobutton type menu items
 
+For radiobutton menu items, you need a stateful action with a string (or maybe integer also works?) value. In the action name, code the variant/selection of the radio button, as seen above in the "chooseoptions" actions.
+
 ## List view
 
-Tables with data are often useful for showing experiment results, or grouping a large number of similar options/data together. When the table size is not known beforehand (i.e., a variable number of rows will be produced), you can use the GtkColumnView to present this data. This is one of the big changes compared to gtk3, and although the resulting solution at first look seems more complicated, after having converted a number of these I can say that the gtk4 version is more robust, flexible, and it can be approached in a simple, step-wise manner. 
+Tables with data are often useful for showing experiment results, or grouping a large number of similar options/data together. When the table size is not known beforehand (i.e., a variable number of rows will be produced), you can use the GtkColumnView to present this data. This is one of the big changes compared to gtk3, and although the resulting solution at first look seems more complicated, after having converted a number of these I can say that the gtk4 version is more robust, flexible, and it can be approached in a simple, step-wise manner.
 
 ### Creating your data type
 
@@ -282,11 +383,11 @@ You need a datatype that is as "thin" as possible, compatible with the gtk (actu
 
 ~~~~{.cxx}
 // define the struct for my data type
-struct _MyResults 
+struct _MyResults
 {
   // extremely important to have a GObject (or possibly GInitiallyUnowned) as parent
   GObject parent;
-  
+
   // and simply link to my data somewhere else
   std::shared_ptr<Results> result;
 };
@@ -377,24 +478,24 @@ using Gtk 4.0;
 Window mainwindow {
 
   ScrolledWindow {
-    
+
     ColumnView results_table {
-        
+
       ColumnViewColumn {
         title: "Participant";
         factory: SignalListItemFactory fact_participant {};
       }
-      
+
       ColumnViewColumn {
         title: "Condition";
         factory: SignalListItemFactory fact_condition {};
       }
-      
+
       ColumnViewColumn {
         title: "Score";
         factory: SignalListItemFactory fact_score {};
       }
-    
+
     }
   }
 
@@ -421,12 +522,12 @@ The factories have two typical signals that need to be connected, "setup" and "b
                            GtkListItem *item, gpointer user_data);
 ~~~~
 
-All three columns will be filled with label fields, and we can use the same setup function for those. However, the data connection differs, and we use three different bind functions. 
+All three columns will be filled with label fields, and we can use the same setup function for those. However, the data connection differs, and we use three different bind functions.
 
 In the `complete()` function, we need a new callback table. Look above for how to use it:
 
 ~~~~{.cxx}
-  // table linking widget signals to code. 
+  // table linking widget signals to code.
   static GladeCallbackTable cb_links[] = {
     { "fact_participant", "setup", gtk_callback(&_ThisModule_::cbSetupLabel) },
     { "fact_condition", "setup", gtk_callback(&_ThisModule_::cbSetupLabel) },
@@ -442,7 +543,7 @@ In the `complete()` function, we need a new callback table. Look above for how t
 
   window.readGladeFile("../../../show-score/score-interface/main.ui",
                        "welcome", this, cb_links);
- 
+
   // in addition, we need to give the table a list of our freshly-minted objects
   auto table = GTK_COLUMN_VIEW(window["results_table"]);
 
@@ -467,7 +568,7 @@ void ResultsWindow::cbSetupLabel(GtkSignalListItemFactory *fact,
 }
 ~~~~
 
-The bind functions should link the data in your application to the interface widgets. If the data does not change (like the participant id), you can simply copy it over by setting the label string:
+The bind functions should link the data in your application to the interface widgets. If the data does not change (like the participant id), you can simply copy the data over by setting the label string:
 
 ~~~~{.cxx}
 void ResultsWindow::cbBindParticipantId(GtkSignalListItemFactory *fact, GtkListItem *item,
@@ -480,7 +581,7 @@ void ResultsWindow::cbBindParticipantId(GtkSignalListItemFactory *fact, GtkListI
 }
 ~~~~
 
-However, as an example, let's say we start an experiment, and the running score (for the same participant/run number) is regularly updated. To do that, you can create a dynamic binding, and that is why we created a "score" property on the new data type. 
+However, as an example, let's say we start an experiment, and the running score (for the same participant/run number) is regularly updated. To do that, you can create a dynamic binding, and that is why we created a "score" property on the new data type.
 
 ~~~~{.cxx}
 void ResultsWindow::cbBindScore(GtkSignalListItemFactory *fact, GtkListItem *item,
@@ -502,7 +603,7 @@ Now, in your `doCalculation` activity, you can check whether new data comes in f
     DataReader<Results> r(r_results, ts);
 
     if (!results.size() || (results.back()->runnumber != r.data().runnumber)) {
-      
+
       // new run, push back to my list of results, and update the store
       auto newresult = std::shared_ptr<Results>(new Results(r.data()));
 
@@ -514,7 +615,7 @@ Now, in your `doCalculation` activity, you can check whether new data comes in f
       g_list_store_append(result_store, gresult);
     }
     else {
-    
+
       // just update the data from the last result
       results.back()->score = r.data().score;
 
@@ -523,7 +624,7 @@ Now, in your `doCalculation` activity, you can check whether new data comes in f
       auto lastelt = g_list_store_get_item(result_store, nelts-1);
 
       // notify it has changed
-      g_object_notify_by_pspec(G_OBJECT(lastelt), 
+      g_object_notify_by_pspec(G_OBJECT(lastelt),
                                my_results_properties[MY_RESULTS_SCORE]);
     }
 
@@ -535,4 +636,3 @@ Now, in your `doCalculation` activity, you can check whether new data comes in f
 TO BE COMPLETED.
 
 ### How are trees expanded
-
