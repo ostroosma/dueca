@@ -16,6 +16,7 @@
 
 #include <dueca/dueca_ns.h>
 #include <dueca/dueca-conf-intrusive.h>
+#include <boost/bind/bind.hpp>
 #include <boost/intrusive_ptr.hpp>
 #ifdef HAVE_BOOST_SMART_PTR_INTRUSIVE_REF_COUNTER_HPP
 #define USING_BOOST_INHERIT 1
