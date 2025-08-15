@@ -19,7 +19,9 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/asio.hpp>
 #include <boost/asio/ip/tcp.hpp>
-#include <boost/bind.hpp>
+
+#include <boost/bind/bind.hpp>
+using namespace boost::placeholders;
 
 #include <dueca/debug.h>
 #include <dassert.h>

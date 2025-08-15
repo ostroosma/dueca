@@ -16,7 +16,6 @@
 
 #include <dueca/dueca_ns.h>
 #include <dueca/dueca-conf-intrusive.h>
-#include <boost/bind/bind.hpp>
 #include <boost/intrusive_ptr.hpp>
 #ifdef HAVE_BOOST_SMART_PTR_INTRUSIVE_REF_COUNTER_HPP
 #define USING_BOOST_INHERIT 1
@@ -59,7 +58,8 @@ void intrusive_ptr_release(const A *t) \
   : public boost::intrusive_ref_counter< A >
 #define INHERIT_REFCOUNT_COMMA(A) \
   public boost::intrusive_ref_counter< A >,
-
+using boost::sp_adl_block::intrusive_ptr_add_ref;
+using boost::sp_adl_block::intrusive_ptr_release;
 #endif
 
 #endif

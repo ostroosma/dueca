@@ -23,6 +23,7 @@
 
 #if defined(SCRIPT_PYTHON)
 #include <boost/bind/bind.hpp>
+using namespace boost::placeholders;
 #include <boost/python.hpp>
 #endif
 

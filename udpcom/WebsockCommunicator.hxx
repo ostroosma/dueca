@@ -16,7 +16,6 @@
 
 #include <map>
 #include <chrono>
-#include <boost/bind/bind.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <boost/asio.hpp>
 #include <boost/version.hpp>
