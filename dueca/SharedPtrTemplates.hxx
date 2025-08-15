@@ -58,8 +58,6 @@ void intrusive_ptr_release(const A *t) \
   : public boost::intrusive_ref_counter< A >
 #define INHERIT_REFCOUNT_COMMA(A) \
   public boost::intrusive_ref_counter< A >,
-using boost::sp_adl_block::intrusive_ptr_add_ref;
-using boost::sp_adl_block::intrusive_ptr_release;
 #endif
 
 #endif
