@@ -2,8 +2,9 @@
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
-## [4.2.4] - 2025-07-31
+## [4.2.4] - 2025-08-20
 
+- Fixes for gtkglade windows
 - Add templated constructors to CommObjectReader/Writer (easier)
 - Add templated getValue/setValue to gtk ui interfaces
 - Use DCOReader / DCOWriter without explicit classname
