@@ -1,1 +1,1 @@
-#warning "Empty Enum10Extra.hxx"
+//#warning "Empty Enum10Extra.hxx"

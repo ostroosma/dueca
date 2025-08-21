@@ -193,7 +193,7 @@ struct GladeCallbackTable
     connection in gtk. However, the callback system used by
     GtkGladeWindow already uses *that* gpointer. You can add a new
     value by specifying it in the last column of the
-    GladeCallbackTable. This will help you re-use the same callback 
+    GladeCallbackTable. This will help you re-use the same callback
     for different purposes.
 
     It is also possible to quickly link and load DCO objects to
@@ -213,10 +213,10 @@ struct GladeCallbackTable
     float a TextEntry, an Adjustment, a SpinButton or a Range, for the
     enum a DropDown) are properly named, the GtkGladeWindow can:
 
-    - Set the options for the DropDown based on the enum values, or -- 
+    - Set the options for the DropDown based on the enum values, or --
       when using a mapping table -- have descriptive names instead of the
       enum values.
-    - Set the data from the "a" and "command" members into the interface
+    - Set the data from the "a" and "command" members into the interface.
     - Convert data from the interface to the "a" and "command" members.
 
     As an example, for a glade window with a SpinButton named
@@ -226,14 +226,14 @@ struct GladeCallbackTable
     @code{.cxx}
     // define a mapping between the enum values, and interface strings
     // note that whithout mappings (use NULL), the enum values are used
-    // directly in the interface. The mapping table must remain valid, 
+    // directly in the interface. The mapping table must remain valid,
     // use a "static" keyword for that.
 
     // each enum gets a mapping to label strings
     static const GtkGladeWindow::OptionMapping mapping_command[] = {
       { "On", "Device on" },    // instead of "On", the combo lists "Device On"
       { "Off", "Device off" },  // etc.
-                                // option "Schroedinger" is simply shown 
+                                // option "Schroedinger" is simply shown
                                 // as "Schroedinger"
       { "Invalid", NULL },      // option "Invalid" will not be selectable
       { NULL, NULL }
@@ -247,15 +247,15 @@ struct GladeCallbackTable
 
     // apply the mappings to the opened window
     // this looks through the members of the DCO, and when the member is
-    // detected as an enum, then looks through the mappings, table. 
-    // It will finds "command" there, then finds "mywidgets_command" in 
-    // the gui (ID of widget), and loads the options into the dropdown 
+    // detected as an enum, then looks through the mappings, table.
+    // It will finds "command" there, then finds "mywidgets_command" in
+    // the gui (ID of widget), and loads the options into the dropdown
     // as per the mapping_command table.
     mywindow.fillOptions("TestObject", "mywidgets_%s", NULL,
                          mappings, true);
 
     // set the default values of a TestObject on the interface. Note that
-    // this will also work with a DCOReader that can read data from a 
+    // this will also work with a DCOReader that can read data from a
     // channel
     TestObject deflt;
     CommObjectReader reader("TestObject", reinterpret_cast<void*>(&deflt));
@@ -285,6 +285,24 @@ struct GladeCallbackTable
       e.g., an array format like "myui_%s[%d]" enables you to link widgets
       with ID's "myui_button[0]", "myui_button[1]", etc., to elements in an
       array in the DCO object named "button"
+
+    Some of the possible mappings between DCO members types and gtk4 widgets
+  are:
+
+    | Data type      | Widgets                                            |
+    | -------------- | ---------------------------------------------------|
+    | float, double  | GtkAdjustment, GtkRange, GtkSpinButton, GtkEntry,
+  GtkDropDown | | int, long, short | as for float | | unsigned int, long, short
+  | as for float                            | | std::string    | GtkDropDown,
+  GtkEntry, GtkFileChooser              | | bool           | GtkToggleButton |
+    | enum           | GtkDropDown, GtkCheckButton (in radio group)       |
+
+  To set a choice for an enum value with GtkCheckButtons in a radio group, give
+  the buttons the proper names (suffixed with "-enumvalue").
+
+  These setting and getting actions that you can do with DCO objects, are
+  also available for simple variables (float, double, integer types,
+  std::string), through the setValue and getValue calls.
 
  */
 class GtkGladeWindow
@@ -326,6 +344,11 @@ class GtkGladeWindow
   bool _setValue(const char *wname, bool value, bool warn);
 
   /** Helper, set any value on a widget */
+  bool _setValue(const char *wname, const char *mname, boost::any &b,
+                 bool warn);
+
+  /** Helper, set any value on a widget, checks for enums in radios and
+   * dropdowns */
   bool _setValue(const char *wname, const CommObjectReader &cor, unsigned im,
                  boost::any &b, bool warn);
 
@@ -334,7 +357,7 @@ class GtkGladeWindow
   bool __getValue(const char *wname, boost::any &value, bool warn);
 
   /** Helper, get any value from a widget */
-  bool _getValue(const char *wname, const CommObjectWriter& cow, unsigned ii,
+  bool _getValue(const char *wname, const CommObjectWriter &cow, unsigned ii,
                  boost::any &b, bool warn);
 
 public:
@@ -407,9 +430,10 @@ public:
   /** Access anything in the interface file as objects
 
       @param name        Object name.
+      @param warn        Print a warning if not found.
       @returns           A GObject pointer, NULL when the object is not found.
   */
-  GObject *getObject(const char *name) const;
+  GObject *getObject(const char *name, bool warn = false) const;
 
   /** Open the window
 
@@ -523,6 +547,28 @@ public:
    */
   unsigned getValues(CommObjectWriter &dco, const char *format,
                      const char *arrformat = NULL, bool warn = false);
+
+  /** Retrieve a single value from the interface into a compatible object.
+
+      @param obj object.
+      @param name Widget name.
+      @param warn Print warning when object not found or incompatible.
+      @tparam T  Type of the object
+      @returns true if successful.
+  */
+  template <typename T>
+  bool getValue(T &obj, const char *name, bool warn = false);
+
+  /** Set a single value into the interface into a compatible object.
+
+      @param obj object.
+      @param name Widget name.
+      @param warn Print warning when object not found or incompatible.
+      @tparam T  Type of the object
+      @returns true if successful.
+  */
+  template <typename T>
+  bool setValue(const T &obj, const char *name, bool warn = false);
 
   /** Initialize a text dropdown with a given list or array of values.
 
@@ -661,6 +707,29 @@ bool GtkGladeWindow::loadDropDownText(const char *name, const T &values)
         "DropDown \""
         << name << '"');
   return false;
+}
+
+template <typename T>
+bool GtkGladeWindow::getValue(T &value, const char *name, bool warn)
+{
+  boost::any _v;
+  auto res = __getValue<T>(name, _v, warn);
+  if (res)
+    value = boost::any_cast<T>(_v);
+  return res;
+}
+
+template <>
+bool GtkGladeWindow::setValue<char *>(char *const &value, const char *name,
+                                      bool warn);
+
+//
+template <typename T>
+bool GtkGladeWindow::setValue(const T &value, const char *name, bool warn)
+{
+  boost::any _v = value;
+  auto res = _setValue(name, name, _v, warn);
+  return res;
 }
 
 DUECA_NS_END

@@ -8,10 +8,7 @@ clean-dueca-rundir
 # clean symbolic links
 find . -type l -exec rm {} \;
 
-# run script, if desired
-RUNSCRIPT=0
-if [ $RUNSCRIPT = "1" ]; then
-    rm -f runscript
-fi
+# clean run script
+rm -f runscript
 
 # clean the user's stuff (that's you, you have to add your commands here!)

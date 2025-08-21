@@ -1,15 +1,15 @@
-/** \page gladeinterfaces Creating experiment interfaces with GTK and glade.
+# Creating experiment interfaces with GTK and glade {#gladeinterfaces}
 
 For many experiments and simulations, it would be nice if the
 experiment controller (usually you) can operate the simulation with a
 graphical interface. The DUECA interfaces are based on GTK (GTK 3.x,
-currently, and GTK 2.x is also still supported, but not recommended
-for new projects), and things are kept as simple as possible if you
+or GTK 4.x currently, although GTK 2.x is also still supported, but not
+recommended for new projects), and things are kept as simple as possible if you
 create the interface for your experiment with that same toolkit.
 
 Glade is an excellent tool for creating Gtk interface. Start up glade,
 select widgets from the menu and create your interface. There is a
-tutorial on http://www.glade.org/. 
+[glade tutorial](http://www.glade.org/).
 
 With glade you can create the interface, or at least most of it. The
 next step is connecting this interface to the DUECA module that you
@@ -20,11 +20,11 @@ supplied by DUECA.
 
 The dueca::GtkGladeWindow class builds the interface directly from
 your glade file. It only needs to be able to read the interface
-file. So add the glade file to the repository with \ref appdevel
-"dueca-gproject". Then create a dueca::GtkGladeWindow object in your
+file. So add the glade file to the repository with
+["dueca-gproject"](#appdevel). Then create a dueca::GtkGladeWindow object in your
 interface class and supply it with the name of your glade file:
 
-\code
+~~~~{.cxx}
 // include headers for functions/classes you need in the module
 #include <GtkGladeWindow.hxx>
 
@@ -38,11 +38,11 @@ private: // simulation data
 
   // and more ...
 }
-\endcode
+~~~~
 
 And in the cxx file, open the window (e.g. in complete())
 
-\code
+~~~~{.cxx}
 bool MyInterface::complete()
 {
   /* All your parameters have been set. You may do extended
@@ -52,7 +52,7 @@ bool MyInterface::complete()
                        callbacks_table);
   return true;
 }
-\endcode
+~~~~
 
 This assumes that the file window.glade is readable from the directory
 where dueca is running and the widget "thewindow" is a top-level widget
@@ -60,34 +60,34 @@ in that file.
 
 The actions that can be done in the interface, like clicking the
 buttons, moving sliders, etc., need to be connected to the code of
-your module. The object "callbacks_table" is a table that connects the
+your module. The object `callbacks_table` is a table that connects the
 possible callbacks in the interface to code in your class. As an
 example, consider a button to load a file. In your class definition
-(hxx file), add the method to react to the button release event:
+(.hxx file), add the method to react to the button release event:
 
-\code
+~~~~{.cxx}
   void cbLoad(GtkButton* button, gpointer gp);
-\endcode
+~~~~
 
-To figure what the arguments to such a call must be, check the appropriate
-documentation on https://docs.gtk.org/gtk3/.
-Fill in the widget that you are looking for in the search bar (GtkButton 
-in this case), and check the "Signals" secion to see what signals the 
-button widget provides. The declaration shows you what form your callback 
+To figure what the arguments to such a call must be, check the
+[appropriate documentation](https://docs.gtk.org/gtk3/).
+Fill in the widget that you are looking for in the search bar (GtkButton
+in this case), and check the "Signals" secion to see what signals the
+button widget provides. The declaration shows you what form your callback
 should have.  By adding a reference to this, and any other,
 callbacks to a table, you can let the GtkGladeWindow know how actions
 in the interface should be connected to your code:
 
-\code
+~~~~{.cxx}
 static GladeCallbackTable callbacks_table[] = {
   { "button_load", "clicked", gtk_callback(&MyInterface::cbLoad),
     gpointer(0) },
   { NULL, NULL, NULL, NULL}
 }
-\endcode
+~~~~
 
 Do not forget to close off with the line of NULL pointers! The
-function gtk_callback is a cleverly templated function (actually,
+function gtk_callback is a templated function (actually,
 eight of them), that can handle any class, also classes that are not
 derived from the Module class, and any set of up to eight arguments,
 excluding the customary last gpointer argument, for your callback
@@ -104,14 +104,16 @@ handling of different widgets by the same callback function.
 When building your glade interface, it is best if you give proper
 names to all your widgets, otherwise you end up with names like
 "button1", "button2", "button3" etc., and you might mis-connect these
-buttons. I wish you good luck in the debugging process in that case.
+buttons. I wish you good luck in the debugging process in that case. Note that you do _not need_ to name all your widgets. It is best to only name those that you use within DUECA,
+widgets that you need to organize the layout (grids, tables, boxes, labels etc.)
+can remain unnamed.
 
 Sometimes communication to the interface is needed, for example to
 fill a list with possible options (maybe based on available
 configuration files). To access any widget in the interface, simply
 use the widget name as an index:
 
-\code
+~~~~{.cxx}
   // example to find a specific label, and change its contents
   GtkLabel* label = GTK_LABEL(window["my_label"]);
 
@@ -123,7 +125,14 @@ use the widget name as an index:
   else {
     gtk_label_set_text(label, "new label text");
   }
-\endcode
+~~~~
+
+However, in most cases the dueca::GtkGladeWindow can automatically do stuff
+like that for you, the above could also be done by:
+
+~~~~{.cxx}
+  window.setValue("new label text", "my label");
+~~~~
 
 Note that (if you use gtk3) there are all kinds of nifty features in
 the dueca::GtkGladeWindow class to directly link pieces of your gtk
@@ -133,6 +142,8 @@ interface to DCO objects. You can link:
 - Boolean members in your DCO to GtkToggleButten
 - Floating point members (double or float) or integer members to
   GtkAdjustment, GtkRange, GtkSpinButton or GtkEntry
+- Enumerated value members in your DCO to a GtkComboBox, or to a
+  set of GtkRadioButton radio buttons.
 
 Summarising, the GtkGladeInterface class lets you use an interface
 directly from the definition created by glade, and quickly and cleanly
@@ -142,4 +153,12 @@ example, and the amount of Gtk-specific code is limited to a
 minimum. Also, interfaces built in this manner can easily be adapted
 to newer versions of Gtk.
 
-*/
+It is also possible to get single values (std::string, float, double, integer) out of your interface
+with the dueca::GtkGladeWindow::getValue call.
+
+~~~~{.cxx}
+  double val;
+  if (window.getValue(val, "some_spin_button")) {
+    std::cout << "all good, current value " << val << std::endl;
+  }
+~~~~

@@ -683,7 +683,7 @@ int ArgListProcessor::numberParameters() const
 }
 
 
-ProbeType ArgListProcessor::findType(int idx)
+ProbeType ArgListProcessor::findType(int idx) const
 {
   return table[idx].probe->getType();
 }

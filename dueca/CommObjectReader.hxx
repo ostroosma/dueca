@@ -37,11 +37,11 @@ class ChannelReadToken;
     DataClassRegistry::getMemberIndex call), an ElementReader can be
     created.
 */
-class CommObjectReader: public CommObjectReaderWriter
+class CommObjectReader : public CommObjectReaderWriter
 {
 protected:
   /** Pointer to the currently accessed object, NULL if not used */
-  const void* obj;
+  const void *obj;
 
 public:
   /** Constructor, for testing purposes, and for recursively accessing
@@ -51,23 +51,31 @@ public:
                        nonsense!
       @param obj       Pointer to the object.
   */
-  CommObjectReader(const char* classname, const void* obj = NULL);
+  CommObjectReader(const char *classname, const void *obj = NULL);
+
+  /** Templated constructor.
+
+      @param obj       Object to be read.
+  */
+  template <typename T>
+  CommObjectReader(T &obj) :
+    CommObjectReaderWriter(getclassname<T>()),
+    obj(&obj)
+  {}
 
   /** Return an element accessor based on the element name
 
       @param ename     Name of the data member  */
-  ElementReader operator [] (const char* ename) const;
+  ElementReader operator[](const char *ename) const;
 
   /** Return an element accessor based on index
 
       @param i         Index of the data member */
-  ElementReader operator [] (unsigned i) const;
+  ElementReader operator[](unsigned i) const;
 
   /** Destructor */
   ~CommObjectReader();
 };
-
-
 
 /** Introspective access to data in a channel.
 
@@ -84,19 +92,19 @@ public:
     (start) or time provided. If that is not what you want, test for
     the data time specification.
 */
-class DCOReader: public CommObjectReader
+class DCOReader : public CommObjectReader
 {
   /** Time specification for the access */
-  DataTimeSpec                ts_data;
+  DataTimeSpec ts_data;
 
   /** Origin of the current entry */
-  GlobalId                    data_origin;
+  GlobalId data_origin;
 
   /** access token */
-  ChannelReadToken           &token;
+  ChannelReadToken &token;
 
   /** request time */
-  TimeTickType                ts_request;
+  TimeTickType ts_request;
 
 public:
   /** Constructor. Note that these objects are light-weight, and meant to be
@@ -106,10 +114,9 @@ public:
                        entry accessed with the read token.
       @param token     Read token.
       @param ts        Time specification. Accessed data point will not be newer
-                       than ts.getValidityStart()
-  */
-  DCOReader(const char* classname,
-            ChannelReadToken &token, const DataTimeSpec& ts);
+                       than ts.getValidityStart(). */
+  DCOReader(const char *classname, ChannelReadToken &token,
+            const DataTimeSpec &ts);
 
   /** Constructor with TimeSpec.
 
@@ -117,10 +124,8 @@ public:
                        entry accessed with the read token.
       @param token     Read token.
       @param ts        Time specification. Accessed data point will not be newer
-                       than ts.getValidityStart()
- */
-  DCOReader(const char* classname,
-            ChannelReadToken &token, const TimeSpec& ts);
+                       than ts.getValidityStart(). */
+  DCOReader(const char *classname, ChannelReadToken &token, const TimeSpec &ts);
 
   /** Constructor with time tick.
 
@@ -131,23 +136,47 @@ public:
                        the tick. Note that the default (not specifying
                        this parameter) simply gives you the latest
                        data in the channel if JumpToMatchTime is
-                       selected for the read token.
- */
-  DCOReader(const char* classname, ChannelReadToken &token,
-            TimeTickType ts=MAX_TIMETICK);
+                       selected for the read token. */
+  DCOReader(const char *classname, ChannelReadToken &token,
+            TimeTickType ts = MAX_TIMETICK);
+
+  /** Constructor. Note that these objects are light-weight, and meant to be
+      constructed (on the stack) and discarded.
+
+      @param token     Read token.
+      @param ts        Time specification. Accessed data point will not be newer
+                       than ts.getValidityStart(). */
+  DCOReader(ChannelReadToken &token, const DataTimeSpec &ts);
+
+  /** Constructor with TimeSpec.
+
+      @param token     Read token.
+      @param ts        Time specification. Accessed data point will not be newer
+                       than ts.getValidityStart() */
+  DCOReader(ChannelReadToken &token, const TimeSpec &ts);
+
+  /** Constructor with time tick.
+
+      @param token     Read token.
+      @param ts        Time tick. Accessed data point will not be newer than
+                       the tick. Note that the default (not specifying
+                       this parameter) simply gives you the latest
+                       data in the channel if JumpToMatchTime is
+                       selected for the read token. */
+  DCOReader(ChannelReadToken &token, TimeTickType ts = MAX_TIMETICK);
 
   /** Destructor */
   ~DCOReader();
 
   /** Return the time specification of the data. */
-  inline const DataTimeSpec& timeSpec() const
+  inline const DataTimeSpec &timeSpec() const
   {
     // access();
     return this->ts_data;
   }
 
   /** Return the origin/sender of the data */
-  inline const GlobalId& origin() const
+  inline const GlobalId &origin() const
   {
     // access();
     return this->data_origin;
@@ -155,18 +184,17 @@ public:
 
 private:
   /** Copying is not possible. */
-  DCOReader(const DCOReader&);
+  DCOReader(const DCOReader &);
 
   /** Nor is assignment. */
-  DCOReader& operator = (const DCOReader& );
+  DCOReader &operator=(const DCOReader &);
 
   /** And new is certainly forbidden! */
-  static void* operator new(size_t s);
+  static void *operator new(size_t s);
 
   /** initiate access */
   void access();
 };
-
 
 DUECA_NS_END;
 #endif

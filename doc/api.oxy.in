@@ -18,7 +18,7 @@ INPUT = mainpage-api.md \
         @CMAKE_CURRENT_SOURCE_DIR@/primarycontrols.doc \
         @CMAKE_CURRENT_SOURCE_DIR@/faq.doc \
         @CMAKE_CURRENT_SOURCE_DIR@/configuration-ref.doc \
-        @CMAKE_CURRENT_SOURCE_DIR@/gladeinterfaces.doc \
+        @CMAKE_CURRENT_SOURCE_DIR@/gladeinterfaces.md \
         @CMAKE_CURRENT_SOURCE_DIR@/example/PulsedBody.hxx \
         @CMAKE_BINARY_DIR@/dueca/SimStateRequest.hxx \
         @CMAKE_CURRENT_SOURCE_DIR@/default-modules.doc \
@@ -30,7 +30,7 @@ INPUT = mainpage-api.md \
         @CMAKE_CURRENT_SOURCE_DIR@/servicefunctor.doc \
         @CMAKE_CURRENT_SOURCE_DIR@/bugs.doc \
         @CMAKE_CURRENT_SOURCE_DIR@/configurationpy.doc \
-        @CMAKE_CURRENT_SOURCE_DIR@/pyscript.doc \
+        @CMAKE_CURRENT_SOURCE_DIR@/pyscript.md \
         @CMAKE_CURRENT_SOURCE_DIR@/outputanalysis.doc \
         @CMAKE_CURRENT_SOURCE_DIR@/json.doc \
         @CMAKE_CURRENT_SOURCE_DIR@/plotting.doc \

@@ -54,16 +54,42 @@ DUECA_NS_START
       "give me a MyHelper object" },
     \endcode
 
-    The setHelper call should accept a ScriptCreatable, check whether
+    The setHelper call should accept a ScriptCreatable, then check whether
     it is really a MyHelper object, and keep a reference to the
     MyHelper object.
+
+    DUECA objects (Modules and ScriptCreatable helpers) use intrusive ref
+    counting. In your module, you may for example define a ref pointer
+    to keep a reference to the helper:
+
+    \code
+    // this uses, includes the pointer types used by DUECA
+    #include <dueca/DuecaPtrTemplates.hxx>
+
+    ...
+
+    class MyModule: public SimulationModule
+    {
+
+      ...
+
+      // to keep the helper, somewhere in your module class:
+      boost::intrusive_ptr<MyHelper> helper;
+
+      ...
+
+    };
+    \endcode
+
+    The function to accept the helper can be written as:
+
     \code
     bool MyModule::setHelper(ScriptCreatable &h, bool in);
     {
       // direction MUST be in
       if (!in) return false;
 
-      // try a dynamic cast
+      // try a dynamic cast with a simple pointer first
       MyHelper* local_helper = dynamic_cast<MyHelper*> (&h);
       if (local_helper == NULL) {
         E_MOD("Object is not a helper!");
@@ -71,9 +97,9 @@ DUECA_NS_START
       }
 
       // keep the pointer to the helper
-      helper = local_helper;
+      helper.reset(local_helper);
 
-      // say its all right
+      // say it's all right
       return true;
     }
     \endcode
@@ -85,12 +111,11 @@ DUECA_NS_START
     collection will only kick in when both the helper and module
     objects in the above scripts are cleared.
 */
-template <class C, class T>
-class MemberCall2Way: public GenericVarIO
+template <class C, class T> class MemberCall2Way : public GenericVarIO
 {
   /** Pointer to a function member with argument of type const T&, in
       class C */
-  bool (C:: *call) (T&, bool);
+  bool (C::*call)(T &, bool);
 
 public:
   /** Constructor.
@@ -102,18 +127,17 @@ public:
                  variable "in" is true (into the class), or return the
                  value of T when "in" is false (out of the class).
   */
-  MemberCall2Way(bool (C :: *c) (T&, bool in));
+  MemberCall2Way(bool (C ::*c)(T &, bool in));
 
   /** Call the member function with data. */
-  bool poke(void* obj, const T& v) const;
+  bool poke(void *obj, const T &v) const;
 
   /** Obtain data from the class object. */
-  bool peek(void* obj, T& v) const;
+  bool peek(void *obj, T &v) const;
 };
 
 DUECA_NS_END
 #endif
-
 
 //--------------------------------------------------------------------
 // IMPLEMENTATION
@@ -127,7 +151,7 @@ DUECA_NS_END
 DUECA_NS_START
 
 template <class C, class T>
-MemberCall2Way<C,T>::MemberCall2Way(bool (C :: *c) (T&, bool)) :
+MemberCall2Way<C, T>::MemberCall2Way(bool (C ::*c)(T &, bool)) :
   GenericVarIO(),
   call(c)
 {
@@ -135,15 +159,15 @@ MemberCall2Way<C,T>::MemberCall2Way(bool (C :: *c) (T&, bool)) :
 }
 
 template <class C, class T>
-bool MemberCall2Way<C,T>::poke(void* obj, const T& v) const
+bool MemberCall2Way<C, T>::poke(void *obj, const T &v) const
 {
-  return ((* (C*) obj) .* call) (const_cast<T&>(v), true);
+  return ((*(C *)obj).*call)(const_cast<T &>(v), true);
 }
 
 template <class C, class T>
-bool MemberCall2Way<C,T>::peek(void* obj, T& v) const
+bool MemberCall2Way<C, T>::peek(void *obj, T &v) const
 {
-  return ((* (C*) obj) .* call) (v, false);
+  return ((*(C *)obj).*call)(v, false);
 }
 
 DUECA_NS_END

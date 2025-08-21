@@ -501,6 +501,16 @@ public:
       @returns    The label of the entry. */
   const std::string &getEntryLabel() const;
 
+  /** Get the data class of the current entry, if available.
+
+      Note that when reading multiple entries, this may depend on which
+      entry is currently selected. Of course, the data class is always
+      the same as, or a descendent of, the data class specified when
+      creating the read token.
+
+      @returns    The data class of the entry. */
+  const std::string &getEntryDataClassName() const;
+
   /** Returns the number of data points older than the given,
       for any of the entries read by this token.
 

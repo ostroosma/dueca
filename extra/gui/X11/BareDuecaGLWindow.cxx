@@ -450,8 +450,8 @@ bool BareDuecaGLWindow::selectGraphicsContext(bool do_select)
   }
   else if (my) {
     glXMakeCurrent(static_dpy, None, NULL);
-    return false;
   }
+  return false;
 }
 
 void BareDuecaGLWindow::redraw()

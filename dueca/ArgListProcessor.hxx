@@ -130,7 +130,7 @@ public:
       table.
       \param  idx  Entry in the table.
       \returns     A pre-defined type description. */
-  ProbeType findType(int idx);
+  ProbeType findType(int idx) const;
 
   inline const std::string& getName() const {return name;}
 

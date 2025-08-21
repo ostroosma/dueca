@@ -26,7 +26,7 @@ USING_DUECA_NS;
 
 /** \brief ScriptCreatable templated holder class
 
-    This template can be used for scheme creatable objects (defined in a
+    This template can be used for script-creatable objects (defined in a
     DCO file) that do not directly derive from ScriptCreatable.
 
     Typically, use of this class is invoked by setting
@@ -51,7 +51,7 @@ USING_DUECA_NS;
 
     \code{.python}
     object = dueca.MyDCOObject().param(
-        my_member_variable = <some value>;
+        my_member_variable = <some value>
     )
     \endcode
 

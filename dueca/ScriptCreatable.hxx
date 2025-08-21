@@ -18,11 +18,11 @@
 #ifdef ScriptCreatable_cxx
 #endif
 
-#include "ClockTime.hxx"
 #include "visibility.h"
-#include <dueca_ns.h>
-#include <SharedPtrTemplates.hxx>
-#include <PythonCorrectedName.hxx>
+#include "dueca_ns.h"
+#include "SharedPtrTemplates.hxx"
+#include "ClockTime.hxx"
+#include "PythonCorrectedName.hxx"
 
 DUECA_NS_START
 

@@ -27,7 +27,7 @@ LNK_PUBLICC void InitDDFFLog()
 {
   startIOStream();
   if (!DuecaEnv::scriptSpecific()) {
-    std::cout << "Init from  [dueca-ddfflog]" << std::endl;
+    std::cout << "Init from     [dueca-ddfflog]" << std::endl;
   }
 
   static TypeCreator<dueca::ddff::DDFFLogger>

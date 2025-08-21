@@ -626,7 +626,10 @@ void UDPSocketCommunicator::flush()
     }
 
     if (nbytes) {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
       int i_peer_id = NetCommunicator::ControlBlockReader::decodePeerId(buffer);
+#pragma GCC diagnostic pop
       SenderINET id(peer_ip.in.sin_addr.s_addr, htons(peer_ip.in.sin_port));
       DEB("Initial flushing UDP message from host/port: "
           << id << " claiming id: " << i_peer_id);

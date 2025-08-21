@@ -9,11 +9,9 @@ authors = [
   ]
 classifiers = [
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: EUPL License",
     "Operating System :: OS Independent" ]
 
-[license]
-text = "EUPL 1.2"
+license = "EUPL-1.2"
 
 [dependencies]
 msgpack-python = "^1.0.3"

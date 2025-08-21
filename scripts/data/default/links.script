@@ -3,7 +3,7 @@
 # running the application on a specific machine.
 
 # standard folder with project-wide data
-DATADIR=../../run-data
+DATADIR=$(realpath ../../run-data)
 
 # example for project-wide configuration (.cnf) files
 # ln -sf $DATADIR/*.cnf .
@@ -20,17 +20,25 @@ else
    ln -sf ../../../dueca_run.x .
 fi
 
-# create a run script, if desired set to 1
-RUNSCRIPT=0
-
-# files you want kept with the run results, e.g. logs
+# --- create a runscript ---
+# list files you want kept with the run results, e.g. logs
 MOVEFILES=""
-# files you want copies with the run results, e.g. config file
+# files you want copied/archived with the run results, e.g. config file
 COPYFILES="dueca_mod.py"
+
+# create the run script. Adapt if needed for your use case
 if [ \! -x runscript -a ${RUNSCRIPT} = "1" ]; then
     cat >runscript <<EOF
 #!/usr/bin/bash
+#
+# Automatically generated from the links.script file
+#
+
+# Gather all files from previous run, and move to new folder under
+# runlogs
 dueca-archivelogfiles "$MOVEFILES" "$COPYFILES"
+
+# start DUECA executable.
 ./dueca_run.x  > >(tee normal.log) 2> >(tee error.log >&2)
 EOF
     chmod +x runscript

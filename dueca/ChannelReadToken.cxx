@@ -163,6 +163,13 @@ const std::string &ChannelReadToken::getEntryLabel() const
   return handle->entry ? handle->entry->entry->getLabel() : nolabel;
 }
 
+const std::string &ChannelReadToken::getEntryDataClassName() const
+{
+  const static std::string noclass;
+  return handle->entry ? handle->entry->entry->getDataClassName() : noclass;
+}
+
+
 bool ChannelReadToken::isValid()
 {
   return channel->readTokenIsValid(handle) || isZeroEntriesAcceptable(arity);
