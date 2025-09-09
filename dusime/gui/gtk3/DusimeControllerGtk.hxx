@@ -21,11 +21,12 @@ DUECA_NS_START
 
 struct ParameterTable;
 
-/** This is a definition of a singleton object that controls the
+/** This is the singleton object that controls the
     Dusime modules (HardwareModule, SimulationModule) in a
     dueca/dusime system. This controller accepts signals from the
     interface (button presses etc.) and communicates with the
-    different modules. */
+    different modules. 
+  */
 class DusimeControllerGtk : public DusimeController
 {
   /** Button to select inactive state. */

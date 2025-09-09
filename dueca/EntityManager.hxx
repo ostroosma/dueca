@@ -17,8 +17,6 @@
 #include <map>
 #include <list>
 #include "Callback.hxx"
-#include "EntityState.hxx"
-#include "EntityUpdate.hxx"
 #include "NamedObject.hxx"
 #include "Activity.hxx"
 #include "SimTime.hxx"

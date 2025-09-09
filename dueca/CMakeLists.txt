@@ -35,7 +35,7 @@ set(DUECASOURCES
   AmorphStore.hxx Arena.cxx Arena.hxx ArenaPool.cxx ArenaPool.hxx
   ChannelIdList.cxx ChannelManager.cxx ChannelOrganiser.cxx
   ClockTime.cxx Condition.cxx DataSetConverter.cxx
-  DataSetSubsidiary.hxx Dstring.cxx EntityManager.cxx EntityState.cxx
+  DataSetSubsidiary.hxx Dstring.cxx EntityManager.cxx 
   Environment.cxx Event.hxx EventAccessToken.hxx Exception.cxx
   GenericCallback.cxx GenericEvent.cxx GenericPacker.cxx
   GenericToken.cxx GuileStart.hxx CyclicInt.cxx MemberCall.hxx
@@ -125,7 +125,7 @@ set(INSTALLHEADERS
   Activity.hxx AmorphStore.hxx Arena.hxx ArenaPool.hxx Callback.hxx
   Callback.ixx CallbackWithId.hxx ClockTime.hxx Condition.hxx
   DataSetConverter.hxx DataSetSubsidiary.hxx visibility.h Dstring.hxx
-  Entity.hxx EntityState.hxx Environment.hxx Event.hxx
+  Entity.hxx Environment.hxx Event.hxx
   EventAccessToken.hxx Exception.hxx GenericCallback.hxx
   GenericEvent.hxx GenericToken.hxx GenericVarIO.hxx MemberCall.hxx
   Module.hxx ModuleCreator.hxx NamedChannel.hxx NamedObject.hxx

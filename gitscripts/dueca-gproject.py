@@ -392,7 +392,7 @@ class NewProject:
 
         # check that the local disk is free
         if os.path.exists(ns.name):
-            raise Exception(
+            raise FileExistsError(
                 f"Folder {ns.name} already exists, cannot create project")
 
         # check that the remote project is clean/has not code
@@ -473,7 +473,7 @@ class CloneProject:
 
         # check that the local disk is free
         if os.path.exists(name):
-            raise Exception(
+            raise FileExistsError(
                 f"Folder {name} already exists, cannot clone project there.")
 
         os.mkdir(name)
@@ -499,7 +499,7 @@ class CloneProject:
         try:
             orig.fetch()
         except git.GitCommandError as e:
-            print(f"Cannot fetch from {RootMap().urlToAbsolute(ns.remote)}\n"
+            print(f"Cannot fetch from {RootMap().urlToAbsolute(ns.remote)}: {e}\n"
                   "Clone failed, check url and access rights")
             sys.exit(-1)
         dprint("check out on branch", ns.version)
@@ -575,8 +575,7 @@ class OnExistingProject():
         if len(curpath) < 2 or curpath[-1] != curpath[-2]:
             print(f"Could not find project folder in {os.getcwd()}",
                   file=sys.stderr)
-            raise Exception(f"dueca-gproject {command} needs to be run from"
-                            " the main project directory")
+            raise FileNotFoundError("Cannot find a project directory here")
 
         self.project = curpath[-1]
         self.projectdir = projectdir
@@ -862,7 +861,7 @@ class Refresh(OnExistingProject):
             if ns.machineclass:
                 mclasses = os.listdir('.config/class')
                 if ns.machineclass not in mclasses:
-                    raise Exception(f"Machine class {ns.machineclass} does not exist")
+                    raise ValueError(f"Machine class {ns.machineclass} does not exist")
 
                 with open(f'{self.projectdir}/.config/machine', 'w') as m:
                     m.write(str(ns.machineclass)+'\n')
@@ -918,7 +917,7 @@ class NewPlatform(OnExistingProject):
             self.pushDir()
 
             if os.path.exists(f"{self.projectdir}/run/{ns.name}"):
-                raise Exception(f"Platform {ns.name} already exists")
+                raise FileExistsError(f"Platform {ns.name} already exists")
             os.mkdir(f'{self.projectdir}/run/{ns.name}')
             g = GitHandler(self.project)
             g.addFolder(f'{self.projectdir}/run/{ns.name}')
@@ -946,6 +945,8 @@ NewPlatform.args(subparsers)
 
 
 class NewNode(OnExistingProject):
+    """Create a new node.
+    """
 
     command = 'new-node'
 
@@ -1018,9 +1019,9 @@ class NewNode(OnExistingProject):
             self.pushDir()
 
             if os.path.exists(f'{self.projectdir}/run/{ns.platform}/{ns.name}'):
-                raise Exception(f"Node {ns.name} already exists in {ns.platform}")
+                raise FileExistsError(f"Node {ns.name} already exists in {ns.platform}")
             if ns.node_number < 0 or ns.node_number >= ns.num_nodes:
-                raise Exception(
+                raise ValueError(
                     'Node number must be smaller than number of nodes')
 
             scriptlang = self.checkScriptlang()
@@ -1113,7 +1114,7 @@ class NewMachineClass(OnExistingProject):
             self.pushDir()
 
             if os.path.exists(f'{self.projectdir}/.config/class/{ns.name}'):
-                raise Exception(f'Machine class {ns.name} already present')
+                raise FileExistsError(f'Machine class {ns.name} already present')
 
             g = GitHandler()
             tofill = {'projectdir': self.projectdir,

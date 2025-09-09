@@ -613,3 +613,28 @@ problem there, so if you tested a communication with python, and it
 does not seem to work with libblepp, check with Wireshark what the
 message size used by the device is.
 
+## Booting and kernel selection
+
+In simulator installations, the computers that you use are often not equipped with a keyboard, and you probably want them to boot into the right linux (real-time kernel). To modify the selected kernel, first figure out the grub boot menu
+
+~~~{.sh}
+$ grep submenu /boot/grub/grub.cfg
+submenu 'Advanced options for Ubuntu' ...
+$ grep menuentry /boot/grub/grub.cfg
+...
+menuentry 'Ubuntu, with Linux 6.16.4-rt' ...
+~~~
+
+With that, edit the `GRUB_DEFAULT` variable in `/etc/default/grub`, to read:
+
+~~~{.sh}
+GRUB_DEFAULT="Advanced options for Ubuntu>Ubuntu, with Linux 6.16.4-rt"
+GRUB_SAVEDEFAULT="false"
+~~~
+
+Also set `GRUB_SAVEDEFAULT` to false, to prevent overwriting the default.
+Update grub to make the changes:
+
+~~~{.sh}
+$ update-grub
+~~~
