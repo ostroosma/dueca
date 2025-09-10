@@ -17,7 +17,7 @@
 
 #include <dueca_ns.h>
 #include <CommObjectReaderWriter.hxx>
-#include <TimeSpec.hxx>
+#include <DataTimeSpec.hxx>
 #include <SimTime.hxx>
 
 DUECA_NS_START;

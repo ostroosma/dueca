@@ -13,7 +13,6 @@
 */
 
 #pragma once
-#define fix_optional_hxx
 #include <dueca/dueca_ns.h>
 #include <dueca/PackTraits.hxx>
 #include <dueca/CommObjectTraits.hxx>
@@ -160,6 +159,9 @@ ostream &operator<< (ostream &os,
 }
 
 PRINT_NS_END;
+
+#define fix_optional_hxx
+#include <msgpack.hxx>
 
 MSGPACKUS_NS_START;
 /** function to "stream" unpack from msgpack */

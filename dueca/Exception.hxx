@@ -77,23 +77,7 @@ public:
 #endif
 
 /** Newer kind of exception, with standard message and max size */
-#ifndef _NOEXCEPT
-#define _NOEXCEPT throw()
-#endif
 
-template<size_t n>
-class MsgException: public std::exception
-{
-  char msg[n];
-public:
-  /** Constructor */
-  MsgException(const char* m1, const char* m2=NULL,
-               const char* m3=NULL, const char* m4=NULL,
-               const char* m5=NULL, const char* m6=NULL);
-
-  /** print message */
-  const char* what() const _NOEXCEPT ;
-};
 
 
 /** \macro MAKE_EXCEPT Creates exceptions, children of Exception. */

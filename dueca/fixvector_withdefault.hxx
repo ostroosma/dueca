@@ -14,7 +14,6 @@
 */
 
 #pragma once
-#define fixvector_withdefault_hxx
 #include <CommObjectTraits.hxx>
 #include <PackTraits.hxx>
 #include <dueca_ns.h>
@@ -185,6 +184,9 @@ ostream &operator<<(ostream &os,
 }
 
 PRINT_NS_END;
+
+#define fixvector_withdefault_hxx
+#include <msgpack.hxx>
 
 MSGPACKUS_NS_START;
 

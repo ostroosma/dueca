@@ -37,6 +37,7 @@
 
 ;; Describes the state a module may be in.
 (EventAndStream ModuleState
+  (Option msgpack)
   (IncludeFile ModuleStateExtra)
   (Type t (Default Undefined))
 )

@@ -17,7 +17,7 @@
 #define DataClassRegistryPredef_hxx
 
 #include <dueca_ns.h>
-#include <Exception.hxx>
+#include <exception>
 #include <map>
 #include <string>
 #include <memory>
@@ -25,6 +25,25 @@
 #include <dueca/visibility.h>
 
 DUECA_NS_START;
+
+#ifndef _NOEXCEPT
+#define _NOEXCEPT throw()
+#endif
+
+template<size_t n>
+class MsgException: public std::exception
+{
+  char msg[n];
+public:
+  /** Constructor */
+  MsgException(const char* m1, const char* m2=NULL,
+               const char* m3=NULL, const char* m4=NULL,
+               const char* m5=NULL, const char* m6=NULL);
+
+  /** print message */
+  const char* what() const _NOEXCEPT ;
+};
+
 
 class CommObjectMemberAccessBase;
 typedef CommObjectMemberAccessBase* CommObjectMemberAccessBasePtr;

@@ -13,6 +13,7 @@
 //#pragma implementation
 
 #include "Exception.hxx"
+#include "DataClassRegistryPredef.hxx"
 #include <iostream>
 #include <cstring>
 DUECA_NS_START

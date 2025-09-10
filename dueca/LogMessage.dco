@@ -15,7 +15,7 @@
 (Type ActivityContext "#include <ActivityContext.hxx>")
 
 ;; This event represents a log message from somewhere in the system
-(Event LogMessage
+(Object LogMessage
        (IncludeFile LogMessageExtra)
 
        ;; logpoints are unique ID's for logging "possibilities". Each
