@@ -1012,6 +1012,9 @@ bool WebSocketsServer<Encoder, Decoder>::_complete(S &server)
 template <typename Encoder, typename Decoder>
 bool WebSocketsServer<Encoder, Decoder>::complete()
 {
+  // call parent complete
+  WebSocketsServerBase::complete();
+
   /* All your parameters have been set. You may do extended
      initialisation here. Return false if something is wrong. */
 
