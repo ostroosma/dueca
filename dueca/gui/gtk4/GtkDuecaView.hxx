@@ -91,7 +91,7 @@ class GtkDuecaView : public Module, public DuecaView
   bool simple_io;
 
   /** map to quickly find status objects */
-  std::map<unsigned,std::shared_ptr<CoreEntityStatus>> status_map;
+  std::map<unsigned, std::shared_ptr<CoreEntityStatus>> status_map;
 
   /** Widgets for entity level control. */
   GtkWidget *hw_off, *hw_safe, *hw_on, *emergency;
@@ -125,6 +125,12 @@ class GtkDuecaView : public Module, public DuecaView
 
   /** Aperiodic triggering. */
   AperiodicAlarm waker;
+
+  /** Previous state */
+  ModuleState previous_command_state;
+
+  /** Previous state */
+  ModuleState previous_confirmed_state;
 
   /** Not a root class. */
   bool isRootClass();
@@ -169,7 +175,7 @@ public:
 public:
   /** This call allows accessories in DUECA to get entries in the view
       menu. */
-  GAction *requestViewEntry(const char *name, const char* label, void *object);
+  GAction *requestViewEntry(const char *name, const char *label, void *object);
 
   /** Helper to change a view programatically */
   static bool toggleView(GAction *action);
@@ -293,8 +299,6 @@ public:
       \returns          A pointer to the node on the toolkit side. */
   virtual void *insertEntityNode(const char *name, void *parent, int dueca_node,
                                  StatusT1 *obj) override;
-
-
 
   /** Refresh the entity list view. */
   void refreshEntitiesView() override;

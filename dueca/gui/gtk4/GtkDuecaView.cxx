@@ -315,7 +315,9 @@ GtkDuecaView::GtkDuecaView(Entity *e, const char *part,
   cb(this, &GtkDuecaView::updateInterface),
   update_interface(getId(), "update dueca interface", &cb,
                    PrioritySpec(0, -20)),
-  waker()
+  waker(),
+  previous_command_state(),
+  previous_confirmed_state()
 {
   // update the singleton pointer. Note that checking is done in the
   // base class.
@@ -465,18 +467,17 @@ bool GtkDuecaView::complete()
     string commonglade = DuecaPath::prepend("common_if-gtk4.ui");
 
     {
-      GladeCallbackTable cb_links[] = { 
-        
+      GladeCallbackTable cb_links[] = {
+
         { "button_really_quit", "clicked",
-           gtk_callback(&GtkDuecaView::cbQuit2) },
-        { "obnoxious", "clicked",
-          gtk_callback(&GtkDuecaView::cbQuit2)},
-        { "button_continue", "clicked", 
-          gtk_callback(&GtkDuecaView::cbCloseQuit)},
-        { "close_dontstop", "clicked", 
-          gtk_callback(&GtkDuecaView::cbCloseQuit)},
-        { NULL, NULL, NULL, NULL } 
-                                      
+          gtk_callback(&GtkDuecaView::cbQuit2) },
+        { "obnoxious", "clicked", gtk_callback(&GtkDuecaView::cbQuit2) },
+        { "button_continue", "clicked",
+          gtk_callback(&GtkDuecaView::cbCloseQuit) },
+        { "close_dontstop", "clicked",
+          gtk_callback(&GtkDuecaView::cbCloseQuit) },
+        { NULL, NULL, NULL, NULL }
+
       };
 
       res = window.readGladeFile(commonglade.c_str(), NULL,
@@ -907,48 +908,88 @@ void GtkDuecaView::updateEntityButtons(const ModuleState &confirmed_state,
                                        bool emergency_flag)
 {
   if (!simple_io) {
-    switch (confirmed_state.get()) {
-    case ModuleState::InitialPrep:
-      if (command_state == confirmed_state) {
-        gtk_dueca_button_load_image(hw_off, 2);
-      }
-      gtk_widget_set_sensitive(hw_off, TRUE);
-      gtk_widget_set_sensitive(hw_safe, TRUE);
-      gtk_widget_set_sensitive(hw_on, FALSE);
-      break;
-    case ModuleState::Safe:
-      gtk_dueca_button_load_image(hw_safe, 2);
-      gtk_widget_set_sensitive(hw_off, TRUE);
-      if (!emergency_flag) {
-        gtk_widget_set_sensitive(hw_safe, TRUE);
-      }
-      gtk_widget_set_sensitive(hw_on, FALSE);
-      break;
-    case ModuleState::Prepared:
-      gtk_dueca_button_load_image(hw_safe, 2);
-      gtk_widget_set_sensitive(hw_off, TRUE);
-      if (!emergency_flag) {
-        gtk_widget_set_sensitive(hw_safe, TRUE);
-        gtk_widget_set_sensitive(hw_on, TRUE);
-      }
-      break;
-    case ModuleState::On:
-      if (command_state == confirmed_state) {
-        gtk_dueca_button_load_image(hw_on, 2);
-      }
-      gtk_widget_set_sensitive(hw_off, FALSE);
-      if (please_keep_running) {
-        gtk_widget_set_sensitive(hw_safe, FALSE);
-      }
-      else {
-        gtk_widget_set_sensitive(hw_safe, TRUE);
-      }
-      gtk_widget_set_sensitive(hw_on, TRUE);
-      break;
-    default:
 
-      // Unprepared Neutral and Undefined
-      break;
+    if (command_state != previous_command_state) {
+
+      // set the button images for the previously active buttons
+      switch (previous_command_state.get()) {
+      case ModuleState::On:
+        gtk_dueca_button_load_image(hw_on, 0);
+        break;
+      case ModuleState::Prepared:
+      case ModuleState::Safe:
+        gtk_dueca_button_load_image(hw_safe, 0);
+        break;
+      case ModuleState::InitialPrep:
+        gtk_dueca_button_load_image(hw_off, 0);
+      default:
+        break;
+      }
+      previous_command_state = command_state;
+
+      // set the button images for the commanded state to transient
+      if (command_state != confirmed_state) {
+        switch (command_state.get()) {
+        case ModuleState::On:
+          gtk_dueca_button_load_image(hw_on, 1);
+          break;
+        case ModuleState::Prepared:
+        case ModuleState::Safe:
+          gtk_dueca_button_load_image(hw_safe, 1);
+          break;
+        case ModuleState::InitialPrep:
+          gtk_dueca_button_load_image(hw_off, 1);
+        default:
+          break;
+        }
+      }
+    }
+
+    if (confirmed_state != previous_confirmed_state) {
+      switch (confirmed_state.get()) {
+      case ModuleState::InitialPrep:
+        if (command_state == confirmed_state) {
+          gtk_dueca_button_load_image(hw_off, 2);
+        }
+        gtk_widget_set_sensitive(hw_off, TRUE);
+        gtk_widget_set_sensitive(hw_safe, TRUE);
+        gtk_widget_set_sensitive(hw_on, FALSE);
+        break;
+      case ModuleState::Safe:
+        gtk_dueca_button_load_image(hw_safe, 2);
+        gtk_widget_set_sensitive(hw_off, TRUE);
+        if (!emergency_flag) {
+          gtk_widget_set_sensitive(hw_safe, TRUE);
+        }
+        gtk_widget_set_sensitive(hw_on, FALSE);
+        break;
+      case ModuleState::Prepared:
+        gtk_dueca_button_load_image(hw_safe, 2);
+        gtk_widget_set_sensitive(hw_off, TRUE);
+        if (!emergency_flag) {
+          gtk_widget_set_sensitive(hw_safe, TRUE);
+          gtk_widget_set_sensitive(hw_on, TRUE);
+        }
+        break;
+      case ModuleState::On:
+        if (command_state == confirmed_state) {
+          gtk_dueca_button_load_image(hw_on, 2);
+        }
+        gtk_widget_set_sensitive(hw_off, FALSE);
+        if (please_keep_running) {
+          gtk_widget_set_sensitive(hw_safe, FALSE);
+        }
+        else {
+          gtk_widget_set_sensitive(hw_safe, TRUE);
+        }
+        gtk_widget_set_sensitive(hw_on, TRUE);
+        break;
+      default:
+
+        // Unprepared Neutral and Undefined
+        break;
+      }
+      previous_confirmed_state = confirmed_state;
     }
   }
 }

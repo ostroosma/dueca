@@ -15,7 +15,6 @@
 #define DuecaView_hh
 
 #include <ModuleState.hxx>
-#include <string>
 #include <dueca_ns.h>
 #include <StatusT1.hxx>
 
