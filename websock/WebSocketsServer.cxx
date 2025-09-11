@@ -604,7 +604,7 @@ bool WebSocketsServerBase::setPresetWriterSetup(
 
            Wrong keywords found in the setup of a writer with
            preset. Check your configuration files. */
-        E_CNF("Can only use keywords \"event\", \"stream\" or \"ctiming\"");
+        E_CNF("Can only use keywords \"event\", \"stream\", \"bulk\", \"diffpack\", or \"ctiming\"");
         return false;
       }
     }

@@ -397,7 +397,8 @@ public: // coding function
 
     Optionally a /write/name entry can have been created as preset. In
     that case, the write token is created at startup of the server,
-    and writing will be immediately available. The write token and
+    and writing will be immediately available. The first message sent
+    may then be an empty struct. The write token and
     channel entry will also persist after a connection is lost, and
     then a new connection can assume the write entry and continue.
     </td>

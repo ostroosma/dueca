@@ -260,6 +260,16 @@ bool WebSocketsServer<Encoder, Decoder>::_complete(S &server)
       }
       writer.EndObject();
     }
+    for (const auto &wr : presetwriters) {
+      writer.StartObject(3);
+      writer.Key("endpoint");
+      writer.String(wr.first.c_str());
+      writer.Key("dataclass");
+      writer.String(wr.second->datatype.c_str());
+      writer.Key("typeinfo");
+      codeTypeInfo(writer, wr.second->datatype);
+      writer.EndObject();
+    }
     writer.EndArray();
 
     writer.Key("write-and-read");
@@ -374,8 +384,8 @@ bool WebSocketsServer<Encoder, Decoder>::_complete(S &server)
                         const SimpleWeb::error_code &ec) {
       /* DUECA websockets.
 
-       Unexpected error in the "current" URL connection.
-    */
+     Unexpected error in the "current" URL connection.
+  */
     W_XTR("Error in connection " << connection.get() << ". "
                                  << "Error: " << ec
                                  << ", error message: " << ec.message());
@@ -796,8 +806,7 @@ bool WebSocketsServer<Encoder, Decoder>::_complete(S &server)
         // TODO decode message here, and call with arguments
         Decoder dec(in_message->string());
         std::string label;
-        if (!dec.findMember("label", label))
-          throw connectionparseerror();
+        dec.findMember("label", label);
         bool ctiming = false;
         dec.findMember("ctiming", ctiming);
         bool event = true;
@@ -807,8 +816,7 @@ bool WebSocketsServer<Encoder, Decoder>::_complete(S &server)
         bool diffpack = false;
         dec.findMember("diffpack", diffpack);
         std::string dataclass;
-        if (!dec.findMember("dataclass", dataclass))
-          throw connectionparseerror();
+        dec.findMember("dataclass", dataclass);
         // WriteEntry
         ww->second->complete(dataclass, label, !event, ctiming, bulk, diffpack);
       }
