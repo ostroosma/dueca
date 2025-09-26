@@ -49,12 +49,11 @@ It is implemented as:
 - The folder `udpcom` contains the code that links DUECA executables
   over a network.
 
-- The folder `inter` can connect multiple DUECA processes, similar to
-  HLA or DIS.
+- The folder `inter` can (loosely or tightly) connect multiple DUECA processes, similar to how HLA or DIS work. You choose which channels need to be replicated across the DUECA simulations, and optionally whether timing should be synchronized.
 
 - The code generator for communicatable objects is in `pycodegen`.
 
-- With the `websock` addition DUECA can offer websocket communication.
+- With the `websock` addition DUECA can offer websocket communication, typically for connecting DUECA to external programs in python or running in a browser. In addition the websocket communication modules can provide a minimal web server, so you can fetch webpages and (javascript) code.
 
 - The `obs` folder contains build files for rpm-based or deb-based
   distributions. Currently building for Debian, Ubuntu, Fedora and
@@ -94,13 +93,15 @@ simulation over multiple executables, simulation state snapshots;
 input recording, resetting a snapshot and replay, and multi-player
 connection.
 
+The [WorldView](https://github.com/dueca/WorldView) and [FlexiStick](https://github.com/dueca/FlexiStick) projects offer various visualization back-ends and interaction with joystick devices respectively. You can "borrow" modules from these project to integrate these in your own simulation projects.
+
 In the build actions leading up to new releases, the DuecaTestCommunication and
 SimpleSimulation projects are used to check DUECA's code by running
-various more-or-less real-time simulations operated by a test script.
-
+various more-or-less real-time simulations operated by a test script. 
 After having installed DUECA (through compilation or from packages),
-you can start to use it in development of simulation projects. Please
-check the documentation for the `dueca-gproject` script. You will need
+you can start to use it in development of simulation projects. 
+
+Please check the documentation for the `dueca-gproject` script. You will need
 an "upstream" git repository for your code.
 
 ## References
