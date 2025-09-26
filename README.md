@@ -31,7 +31,7 @@ It is implemented as:
  * There is also [Documentation](https://dueca.tudelft.nl/doc/), which
    can be generated from the `doc` folder.
 
- * Some example code.
+ * Some example code; a [test project](https://github.com/dueca/DuecaTestCommunication), which is used in CI testing, and an [example project](https://github.com/dueca/SimpleSimulation), which shows you how to set up a simulation, and is also used in CI testing.
 
 ## What is in here?
 
@@ -40,7 +40,7 @@ It is implemented as:
   graphical interfaces.
 
 - The `extra` folder contains a hodge-podge of helper stuff that may
-  be useful in implementing simulations.
+  be useful in implementing simulations; integration routines, helper classes for IO conversions and implementing calibration and the like.
 
 - `dusime` contains the code supporting simulations.
 
@@ -63,7 +63,7 @@ It is implemented as:
 - the `ddff` folder contains the code for yet another logging format,
   custom-created for efficiently saving and re-loading streaming
   data. This logging format is used by the `dusime` modules to
-  implement record and replay within simulations.
+  implement record and replay within simulations. This logger can be used stand-alone, and python code to convert the files to hdf5 or directly read the files is also available.
 
 ## Building and running
 
@@ -86,7 +86,7 @@ Note that by itself, DUECA won't do anything, you need to create your
 own application code to make a project. You can check out and run the
 DuecaTestCommunication project, but note that that project's only use
 is as a test vehicle. The documentation also details how you can make
-a project named SimpleSimulation, a simple project that demonstrates
+a project named SimpleSimulation, a "simple" project that demonstrates
 joystick input, vehicle dynamcs, a first-person out of the window 3D
 view, instrumentation (a compass window with OpenGL), gtk4-based
 experiment control windows, distributing your

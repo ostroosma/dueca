@@ -2,6 +2,15 @@
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
+## [4.2.5] -
+
+- Corrections to the WebSocketServer write functionality
+- Enable immediate start for the WebSocketServer
+- Add msgpack capability to several DCO objects
+- Correct DUECA button feedback for cases with external programmatic
+  control of the state machine
+- README.md updates, doc fixes
+
 ## [4.2.4] - 2025-08-20
 
 - Fixes for gtkglade windows
