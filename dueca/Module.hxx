@@ -18,7 +18,8 @@
 #include <NamedObject.hxx>
 #include <ModuleState.hxx>
 #include <dueca_ns.h>
-#include <boost/scoped_ptr.hpp>
+#include <memory>
+#include <ReferenceHolder.hxx>
 
 DUECA_NS_START
 class Entity;
@@ -78,9 +79,11 @@ class ModuleCreator;
 class Module : public NamedObject
 {
 private:
-
   /// Pointer to my entity (at least its local representation).
-  const Entity* my_entity;
+  const Entity *my_entity;
+
+  /** Reference holder for creation arguments (valid for Python) */
+  std::shared_ptr<ReferenceHolder> holder;
 
 protected:
   /** Flag to remember whether we are stopped due to some error with
@@ -88,16 +91,15 @@ protected:
   ModuleState state;
 
 private:
-
   /// Copying is not a good thing here.
-  Module(const Module& m);
+  Module(const Module &m);
 
   /// Neither is assignment
-  Module& operator = (const Module& o);
+  Module &operator=(const Module &o);
 
 protected:
   /// Constructor.
-  Module(const Entity *e, const char* m_class, const char* part);
+  Module(const Entity *e, const char *m_class, const char *part);
 
 public:
   /// Destructor.
@@ -176,10 +178,10 @@ public:
   virtual void finalStopModule(const TimeSpec &time);
 
   /** Return a pointer to the entity to which this module belongs. */
-  inline const Entity* getMyEntity() {return my_entity;}
+  inline const Entity *getMyEntity() { return my_entity; }
 
   /** Return the module state. */
-  const ModuleState& getState();
+  const ModuleState &getState();
 
 protected:
   friend class CriticalActivity;
@@ -189,9 +191,16 @@ protected:
 private:
   friend class Entity;
   /** Command the module state. */
-  void setState(const ModuleState& state, const TimeSpec &ts);
-};
+  void setState(const ModuleState &state, const TimeSpec &ts);
 
+  friend class ModuleCreator;
+
+  /** Pass the reference to the arguments */
+  inline void setHolder(std::shared_ptr<ReferenceHolder> p) { holder = p; }
+
+  /** Get the holder */
+  inline std::shared_ptr<ReferenceHolder> getHolder() { return holder; }
+};
 
 DUECA_NS_END
 #endif

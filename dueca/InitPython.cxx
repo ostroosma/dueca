@@ -37,8 +37,6 @@
 #include "FillUnpacker.hxx"
 #include "FillPacker.hxx"
 
-
-
 #define DO_INSTANTIATE
 #include "PythonStart.hxx"
 #include "CoreCreator.hxx"
@@ -52,25 +50,23 @@
 #define DEBRPINTLEVEL 0
 #include <debprint.h>
 
-
 DUECA_NS_START
 
 void init_dueca_accessor(void)
 {
-  static CoreCreator<Accessor,ScriptCreatable>
-    ac("Accessor", NULL);
+  static CoreCreator<Accessor, ScriptCreatable> ac("Accessor", NULL);
 }
 
 void init_dueca_genericpacker(void)
 {
-  static CoreCreator<GenericPacker,ScriptCreatable> g0
-    ("GenericPacker", NULL);
+  static CoreCreator<GenericPacker, ScriptCreatable> g0("GenericPacker", NULL);
 }
 
 // default name for void/no parent
-template<>
-const char* core_creator_name<mpl_::void_>(const char*)
-{ return NULL; }
+template <> const char *core_creator_name<mpl_::void_>(const char *)
+{
+  return NULL;
+}
 
 static void init_dueca_python(void)
 {
@@ -82,23 +78,17 @@ static void init_dueca_python(void)
   static PythonScripting scripter;
 
   // base class for most created objects, not created individually
-  static CoreCreator<ScriptCreatable,mpl_::void_>
-    sc("ScriptCreatable", NULL);
+  static CoreCreator<ScriptCreatable, mpl_::void_> sc("ScriptCreatable", NULL);
 
-  static CoreCreator<Environment,ScriptCreatable>
-    env(Environment::getParameterTable(),
-        "Environment");
+  static CoreCreator<Environment, ScriptCreatable> env(
+    Environment::getParameterTable(), "Environment");
 
   // These are for transport. Can they be transferred to specific init files??
-  static CoreCreator<PackerSet,ScriptCreatable,
-                     GenericPacker&,
-                     GenericPacker&,
-                     GenericPacker&>
-    ps(PackerSet::getParameterTable(),
-       "PackerSet");
-  static CoreCreator<PackerManager,ScriptCreatable>
-    pm(PackerManager::getParameterTable(),
-       "PackerManager");
+  static CoreCreator<PackerSet, ScriptCreatable, GenericPacker &,
+                     GenericPacker &, GenericPacker &>
+    ps(PackerSet::getParameterTable(), "PackerSet");
+  static CoreCreator<PackerManager, ScriptCreatable> pm(
+    PackerManager::getParameterTable(), "PackerManager");
 
   // the following two are the only ones still with the "GuileStart"
   // mode, since these do not fit the corecreator framework
@@ -107,24 +97,21 @@ static void init_dueca_python(void)
 
   // the rest are all CoreCreator compatible, i.e. empty constructor
   // and a ParameterTable.
-  static CoreCreator<Ticker,ScriptCreatable>
-    tick(Ticker::getParameterTable(),
-       "Ticker");
-  static CoreCreator<PeriodicTimeSpec,ScriptCreatable,
-                     bpy::optional<int,int> >
+  static CoreCreator<Ticker, ScriptCreatable> tick(Ticker::getParameterTable(),
+                                                   "Ticker");
+  static CoreCreator<PeriodicTimeSpec, ScriptCreatable, bpy::optional<int, int>>
     spec(PeriodicTimeSpec::getParameterTable(), "TimeSpec");
 
-  //static CoreCreator<PrioritySpec,ScriptCreatable,
-  //                   DefParam<int,0,T_STR("priority")>,
-  //                   DefParam<int,0,T_STR("order")> >
-  //  prio(PrioritySpec::getParameterTable(), "PrioritySpec");
-  static CoreCreator<PrioritySpec,ScriptCreatable,
-                     int,int>
-    prio(PrioritySpec::getParameterTable(), "PrioritySpec");
-  static CoreCreator<ObjectManager,ScriptCreatable,int,int>
-    om(ObjectManager::getParameterTable(), "ObjectManager");
-  static CoreCreator<ChannelManager,ScriptCreatable>
-    cm(ChannelManager::getParameterTable(), "ChannelManager");
+  // static CoreCreator<PrioritySpec,ScriptCreatable,
+  //                    DefParam<int,0,T_STR("priority")>,
+  //                    DefParam<int,0,T_STR("order")> >
+  //   prio(PrioritySpec::getParameterTable(), "PrioritySpec");
+  static CoreCreator<PrioritySpec, ScriptCreatable, int, int> prio(
+    PrioritySpec::getParameterTable(), "PrioritySpec");
+  static CoreCreator<ObjectManager, ScriptCreatable, int, int> om(
+    ObjectManager::getParameterTable(), "ObjectManager");
+  static CoreCreator<ChannelManager, ScriptCreatable> cm(
+    ChannelManager::getParameterTable(), "ChannelManager");
   static GuiHandler h(std::string("none"));
 
   // the following creates a singleton. It will be replaced by a
@@ -134,37 +121,35 @@ static void init_dueca_python(void)
 
 void init_dueca_ipdeps()
 {
-#if SCRIPT_PYTHON
+#if defined(SCRIPT_PYTHON)
   init_dueca_genericpacker();
 #endif
-  static CoreCreator<Unpacker,ScriptCreatable>
-    g1(Unpacker::getParameterTable(),
-       ArgListProcessor::AllowListAndPair, NULL, "Unpacker");
-  static CoreCreator<Packer,GenericPacker>
-    g2(Packer::getParameterTable(),
-       ArgListProcessor::AllowListAndPair, NULL, "Packer");
-  static CoreCreator<FillUnpacker,ScriptCreatable>
-    g3(FillUnpacker::getParameterTable(),
-       ArgListProcessor::AllowListAndPair, NULL, "FillUnpacker");
-  static CoreCreator<FillPacker,GenericPacker>
-    g4 (FillPacker::getParameterTable(),
-       ArgListProcessor::AllowListAndPair, NULL, "FillPacker");
+
+  static CoreCreator<Unpacker, ScriptCreatable> g1(
+    Unpacker::getParameterTable(), ArgListProcessor::AllowListAndPair, NULL,
+    "Unpacker");
+  static CoreCreator<Packer, GenericPacker> g2(
+    Packer::getParameterTable(), ArgListProcessor::AllowListAndPair, NULL,
+    "Packer");
+  static CoreCreator<FillUnpacker, ScriptCreatable> g3(
+    FillUnpacker::getParameterTable(), ArgListProcessor::AllowListAndPair, NULL,
+    "FillUnpacker");
+  static CoreCreator<FillPacker, GenericPacker> g4(
+    FillPacker::getParameterTable(), ArgListProcessor::AllowListAndPair, NULL,
+    "FillPacker");
 }
 
 static SetScriptInitFunction py(init_dueca_python);
 
 // specific implementations from CoreCreatorPython.ixx
-template<>
-ProbeType getProbeType(const typeflag<NOOP>& a)
+template <> ProbeType getProbeType(const typeflag<NOOP> &a)
 {
   return Probe_Sentinel;
 }
 
-template<>
-ProbeType getProbeType(const typeflag<dueca::GenericPacker&>& a)
+template <> ProbeType getProbeType(const typeflag<dueca::GenericPacker &> &a)
 {
   return Probe_GenericPacker;
 }
-
 
 DUECA_NS_END

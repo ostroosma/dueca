@@ -86,6 +86,7 @@ set(DUECASOURCES
   UCEntryConfigurationChange.hxx UCEntryConfigurationChange.cxx
   UCallbackOrActivity.hxx UCallbackOrActivity.cxx
   ManualTriggerPuller.hxx ManualTriggerPuller.cxx
+  ReferenceHolder.hxx ReferenceHolder.cxx
   )
 
 
@@ -113,6 +114,7 @@ set(STARTSOURCESSCHEME
 
 set(STARTSOURCESPYTHON
 
+  ReferenceHolderPython.hxx ReferenceHolderPython.cxx
   ArgListProcessor.cxx InitPython.cxx
   CreationCenter_Python.hxx TypeCreator.cxx
   PythonScripting.cxx PythonScripting.hxx)
@@ -172,7 +174,7 @@ set(INSTALLHEADERS
   msgpack-unstream-iter.hxx msgpack-unstream-iter.ixx
   ListElementAllocator.hxx DCOtypeJSON.hxx undebug.h
   AssociateObject.hxx EasyId.hxx dcoprint.hxx fix_optional.hxx
-  ManualTriggerPuller.hxx
+  ManualTriggerPuller.hxx ReferenceHolder.hxx ReferenceHolderPython.hxx
 )
 # fix_optional.hxx
 

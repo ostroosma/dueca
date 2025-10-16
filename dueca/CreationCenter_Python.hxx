@@ -19,6 +19,7 @@
 #include <ModuleCreator.hxx>
 #include <boost/python.hpp>
 #include <boost/python/raw_function.hpp>
+#include "ReferenceHolderPython.hxx"
 
 #include <dueca/debug.h>
 #define DEBPRINTLEVEL -1
@@ -26,13 +27,25 @@
 
 DUECA_NS_START
 
+static ReferenceHolderPython *getOrCreatePythonHolder(ModuleCreator *object)
+{
+  auto rh = dynamic_cast<ReferenceHolderPython *>(object->getHolder().get());
+  if (rh == NULL) {
+    auto rhnew = new ReferenceHolderPython();
+    object->setHolder(rhnew);
+    return rhnew;
+  }
+  return rh;
+}
+
 static bpy::object addParam(bpy::tuple args, bpy::dict kwargs)
 {
-  bpy::extract<boost::intrusive_ptr<ModuleCreator> > self(args[0]);
+  bpy::extract<boost::intrusive_ptr<ModuleCreator>> self(args[0]);
   if (self.check() && bool(self())) {
-    const ArgListProcessor* ap =
-      dynamic_cast<const ArgListProcessor*>(self()->getFather());
-    if (!ap->processList(kwargs, args, self()->processed())) {
+    auto holder = getOrCreatePythonHolder(self().get());
+    const ArgListProcessor *ap =
+      dynamic_cast<const ArgListProcessor *>(self()->getFather());
+    if (!ap->processList(kwargs, args, self()->processed(), holder)) {
       self()->argumentError();
     }
     return args[0];
@@ -50,28 +63,26 @@ static bpy::object addParam(bpy::tuple args, bpy::dict kwargs)
 }
 
 static boost::intrusive_ptr<ModuleCreator>
-make_module_creator(const std::string& mtype,
-                    const std::string& part,
-                    const PrioritySpec& ps)
+make_module_creator(const std::string &mtype, const std::string &part,
+                    const PrioritySpec &ps)
 {
   DEB("Creating a module of type \"" << mtype << "\" part \"" << part << '"');
-  return boost::intrusive_ptr<ModuleCreator>
-    (CreationCenter::single()->createModuleCreator
-     (mtype, part, ps));
+  return boost::intrusive_ptr<ModuleCreator>(
+    CreationCenter::single()->createModuleCreator(mtype, part, ps));
 }
 
 static void python_module_init()
 {
-  bpy::class_<ModuleCreator, bpy::bases<>,
-              boost::intrusive_ptr<ModuleCreator>, boost::noncopyable>
-    ("Module",
-     "Module - a unit in a DUECA simulation\n"
-     "\n"
-     "  __init__(self, mtype, part, prio): new module\n"
-     "    mtype :string:        module type name\n"
-     "    part  :string:        partname\n"
-     "    prio  :PrioritySpec:  priority specification object",
-     bpy::no_init)
+  bpy::class_<ModuleCreator, bpy::bases<>, boost::intrusive_ptr<ModuleCreator>,
+              boost::noncopyable>(
+    "Module",
+    "Module - a unit in a DUECA simulation\n"
+    "\n"
+    "  __init__(self, mtype, part, prio): new module\n"
+    "    mtype :string:        module type name\n"
+    "    part  :string:        partname\n"
+    "    prio  :PrioritySpec:  priority specification object",
+    bpy::no_init)
     .def("__init__", bpy::make_constructor(make_module_creator))
     .def("param", bpy::raw_function(addParam));
 }

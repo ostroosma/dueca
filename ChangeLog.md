@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 - Correct DUECA button feedback for cases with external programmatic
   control of the state machine
 - README.md updates, doc fixes
+- Correct memory handling for script created objects (Python).
+  References to the dependent objects (arguments to module/scriptcreatable)
+  are stored in the objects/modules, so that these are deleted after the
+  modules are deleted.
 
 ## [4.2.4] - 2025-08-20
 
