@@ -263,20 +263,20 @@ template<class T> const H5::DataType* get_hdf5_elt_type(T&);
 /** for fixed-length vector, becomes 2d dataset */
 template<size_t N, class D>
 const H5::DataType* get_hdf5_elt_type(const dueca::fixvector<N,D>& d)
-{ return get_hdf5_type<D>(); }
+{ return get_hdf5_type(*d.ptr()); }
 /** for fixed-length vector, becomes 2d dataset */
 template<size_t N, class D>
 const H5::DataType* get_hdf5_elt_type(dueca::fixvector<N,D>& d)
-{ return get_hdf5_type<D>(); }
+{ return get_hdf5_type(*d.ptr()); }
 
 /** for fixed-length vector, becomes 2d dataset */
 template<size_t N, class D, int DEFLT, unsigned BASE>
 const H5::DataType* get_hdf5_elt_type(const dueca::fixvector_withdefault<N,D,DEFLT,BASE>& d)
-{ return get_hdf5_type<D>(); }
+{ return get_hdf5_type(*d.ptr()); }
 /** for fixed-length vector, becomes 2d dataset */
 template<size_t N, class D, int DEFLT, unsigned BASE>
 const H5::DataType* get_hdf5_elt_type(dueca::fixvector_withdefault<N,D,DEFLT,BASE>& d)
-{ return get_hdf5_type<D>(); }
+{ return get_hdf5_type(*d.ptr()); }
 
 /** Ignore std::map if trying to write it nested */
 template<typename K, typename T>
