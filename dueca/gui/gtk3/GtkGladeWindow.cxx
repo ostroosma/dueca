@@ -275,7 +275,8 @@ bool GtkGladeWindow::_setValue(const char *wname, const char *value, bool warn)
     GtkTreeIter it;
     gboolean itvalid = gtk_tree_model_get_iter_first(mdl, &it);
     gchararray val = NULL;
-    gtk_tree_model_get(mdl, &it, 0, &val, -1);
+    if (itvalid)
+      gtk_tree_model_get(mdl, &it, 0, &val, -1);
 
     while (itvalid && strcmp(val, value)) {
       itvalid = gtk_tree_model_iter_next(mdl, &it);
