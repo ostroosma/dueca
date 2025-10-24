@@ -190,12 +190,12 @@ void ExperimentInterface::cbMyButton(GtkButton* button, gpointer user_data)
 
   // now collect and send the "experiment condition" data
   // no timespec given (don't know that), so it will be sent with current time
-  DCOWriter we(w_expcond);
-  eciwindow.getValues(we, "eci_%s", NULL, true);
+  DataWriter<ExpCondition> exp(w_expcond);
+  eciwindow.getValues(exp.data(), "eci_%s", NULL, true);
 }
 ~~~~
 
-Some explanation on how this works might be in order. The `DCOWriter` object works as the `DataWriter` you should be familiar with, however it can write the `ExpCondition` object without actually knowing what an `ExpCondition` object is, through introspection. This writer is given to the `eciwindow`'s `getValues` call. This call inspects both the DCO object and the interface, and then tries to fill all "matching" members of the DCO object, in this case an `ExpCondition`.
+Some explanation on how this works might be in order. The the `eciwindow`'s `getValues` call is templated, and as argument it can accept DCO types created with DUECA's code generator. This call inspects both the DCO object and the interface, and then tries to fill all "matching" members of the DCO object, in this case an `ExpCondition`. 
 
 The `"eci_%s"` string specifies the format for looking for widgets. It will be combined with the name of the members in the DCO object (in this case the single member of the `ExpCondition`), here resulting in `"eci_participantid"`. That is the name of the `GtkEntry` widget, so that will be matched, and the text found in the `GtkEntry` widget will be written in the `ExpCondition` object that will be sent off over the channel linked to `w_expcond`. By using a prefix (in this case "eci_"), we can avoid confusion with names of other widgets, and it will also be possible to extract multiple identical DCO object from the interface, as long as different prefixes are used in naming the widgets.
 
@@ -211,7 +211,7 @@ It is also possible to work the other way, with a `setValues` call, and set valu
 | enum              | GtkDropDown (with enum values), GtkCheckButton (as radiobutton) |
 | bool              | GtkCheckButton, GtkToggleButton                                 |
 
-The GtkDropDown widgets can be loaded with values with the `loadDropDownText` call, for example to load a dropdown box with names of experimental conditions. The `fillOptions` text call can be used to fill dropdowns with all possible enum values.
+The GtkDropDown widgets can be loaded with values with the `loadDropDownText` call, for example to load a dropdown box with names of experimental conditions. The `fillOptions` call can be used to fill dropdowns with all possible enum values.
 
 Linking an enum to a group of radio buttons needs some special preparation. In gtk4, radio buttons are created as GtkCheckButton widgets, which are then connected by setting the "group" property of all but one of these checkboxes to the id of the main checkbutton. To link these with the enum values, you need to specify these in the widget id; like so:
 
