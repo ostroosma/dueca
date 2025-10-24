@@ -4,6 +4,26 @@
 # Uncomment and adapt to override X guessing
 # DISPLAY=:1
 
+WESTONPID=$(pgrep --uid $(id --user)) --newest weston
+
+if [ -n $WESTONPID ]; then
+   XDGSET=$(tr '\0' '\n' </proc/$WESTONPID/environ | grep -E ^XDG_RUNTIME_DIR)
+   DBUSSET=$(tr '\0' '\n' </proc/$WESTONPID/environ | grep -E ^DBUS_SESSION_BUS_ADDRESS)
+   WDSET=$(tr '\0' '\n' </proc/$WESTONPID/environ | grep -E ^WESTON_DISPLAY)
+   DSET=$(tr '\0' '\n' </proc/$WESTONPID/environ | grep -E ^DISPLAY)
+
+   export $XDGSET
+   export $DBUSSET
+   export $WDSET
+   export $DSET
+
+   >&2 echo "Weston session detected"
+   >&2 echo $XDGSET
+   >&2 echo $WDSET
+   >&2 echo $DSET
+   
+fi
+
 if [ -z "$DISPLAY" ]; then
 
    # can we see an Xwayland?

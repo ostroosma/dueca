@@ -605,8 +605,19 @@ bool GtkGladeWindow::_getValue(const char *wname, const CommObjectWriter &cor,
   return false;
 }
 
-unsigned GtkGladeWindow::setValues(CommObjectReader &dco, const char *format,
-                                   const char *arrformat, bool warn)
+template <>
+unsigned GtkGladeWindow::setValues<DCOReader>(DCOReader &dco,
+                                              const char *format,
+                                              const char *arrformat, bool warn)
+{
+  return setValues<CommObjectReader>(dco, format, arrformat, warn);
+}
+
+template <>
+unsigned GtkGladeWindow::setValues<CommObjectReader>(CommObjectReader &dco,
+                                                     const char *format,
+                                                     const char *arrformat,
+                                                     bool warn)
 {
   unsigned nset = 0;
   char gtkid[128];
@@ -738,8 +749,19 @@ bool GtkGladeWindow::_setRadiosFromEnum(const char *gtkid,
   return false;
 }
 
-unsigned GtkGladeWindow::getValues(CommObjectWriter &dco, const char *format,
-                                   const char *arrformat, bool warn)
+template <>
+unsigned GtkGladeWindow::getValues<DCOWriter>(DCOWriter &dco,
+                                              const char *format,
+                                              const char *arrformat, bool warn)
+{
+  return getValues<CommObjectWriter>(dco, format, arrformat, warn);
+}
+
+template <>
+unsigned GtkGladeWindow::getValues<CommObjectWriter>(CommObjectWriter &dco,
+                                                     const char *format,
+                                                     const char *arrformat,
+                                                     bool warn)
 {
   unsigned nset = 0;
   char gtkid[128];

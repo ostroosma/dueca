@@ -23,6 +23,8 @@
 #include "GtkCaller.hxx"
 #include "GladeException.hxx"
 #include <boost/any.hpp>
+#include <CommObjectReader.hxx>
+#include <CommObjectWriter.hxx>
 
 #define NO_COMBOBOX
 
@@ -525,8 +527,9 @@ public:
                        widget and datatype do not match.
       @returns         The number of successfully set values
    */
-  unsigned setValues(CommObjectReader &dco, const char *format,
-                     const char *arrformat = NULL, bool warn = false);
+  template <typename DCO>
+  unsigned setValues(DCO &dco, const char *format, const char *arrformat = NULL,
+                     bool warn = false);
 
   /** Find the current state of the interface and push into a DCO object.
 
@@ -545,8 +548,9 @@ public:
                        widget and datatype do not match.
       @returns         The number of successfully read values
    */
-  unsigned getValues(CommObjectWriter &dco, const char *format,
-                     const char *arrformat = NULL, bool warn = false);
+  template <typename DCO>
+  unsigned getValues(DCO &dco, const char *format, const char *arrformat = NULL,
+                     bool warn = false);
 
   /** Retrieve a single value from the interface into a compatible object.
 
@@ -730,6 +734,50 @@ bool GtkGladeWindow::setValue(const T &value, const char *name, bool warn)
   boost::any _v = value;
   auto res = _setValue(name, name, _v, warn);
   return res;
+}
+
+// claim there is a specialized version
+template <>
+unsigned GtkGladeWindow::getValues<CommObjectWriter>(CommObjectWriter &cow,
+                                                     const char *format,
+                                                     const char *arrformat,
+                                                     bool warn);
+
+// claim there is a specialized version
+template <>
+unsigned GtkGladeWindow::getValues<DCOWriter>(DCOWriter &cow,
+                                              const char *format,
+                                              const char *arrformat, bool warn);
+
+// the generic version
+template <typename DCO>
+unsigned GtkGladeWindow::getValues(DCO &dco, const char *format,
+                                   const char *arrformat, bool warn)
+{
+  CommObjectWriter cow(dco);
+  return GtkGladeWindow::getValues(cow, format, arrformat, warn);
+}
+
+// claim there is a specialized version
+template <>
+unsigned GtkGladeWindow::setValues<CommObjectReader>(CommObjectReader &cow,
+                                                     const char *format,
+                                                     const char *arrformat,
+                                                     bool warn);
+
+// claim there is a specialized version
+template <>
+unsigned GtkGladeWindow::setValues<DCOReader>(DCOReader &cow,
+                                              const char *format,
+                                              const char *arrformat, bool warn);
+
+// the generic version
+template <typename DCO>
+unsigned GtkGladeWindow::setValues(DCO &dco, const char *format,
+                                   const char *arrformat, bool warn)
+{
+  CommObjectReader cor(dco);
+  return GtkGladeWindow::setValues(cor, format, arrformat, warn);
 }
 
 DUECA_NS_END

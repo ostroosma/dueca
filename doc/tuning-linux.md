@@ -638,3 +638,65 @@ Update grub to make the changes:
 ~~~{.sh}
 $ update-grub
 ~~~
+
+## Starting a wayland kiosk server
+
+For starting a set of DUECA processes on a simulation lab, it may be 
+handy to have ssh login to the remote machine, and use a start script
+to start a whole simulation. 
+
+It you want to use wayland as your display server, and a wayland-compatible 
+you need to add your user to the following groups:
+
+- tty
+- video
+- input
+- render
+- audio
+
+The tty devices are usually created 640, they need to be fixed with a udev rule;
+`/etc/udev/rules.d/90-westonkiosk.rules`
+
+~~~~{.sh}
+SUBSYSTEM=="tty", KERNEL=="tty[0-9]*", GROUP="tty", MODE="0660"
+~~~~
+
+The westonkiosk package provides a service file that starts weston in kiosk mode, 
+it needs a configuration `.config/weston.ini`
+
+~~~~{.ini}
+[core]
+xwayland=true
+idle-time=0
+shell=kiosk-shell.so
+
+[shell]
+panel-location=none
+
+[autolaunch]
+path=/usr/bin/swayimg my-cool-background.png
+~~~~
+
+The service file:
+
+~~~~{.ini}
+[Unit]
+Description=Weston Wayland compositor for fltsim
+RequiresMountsFor=/run
+After=systemd-user-sessions.service
+
+[Service]
+User=fltsim
+Environment="XDG_RUNTIME_DIR=/run/user/1000"
+ExecStartPre=/bin/mkdir -p /run/user/1000
+ExecStartPre=/bin/chown fltsim:fltsim /run/user/1000
+ExecStartPre=/bin/chmod 0700 /run/user/1000
+ExecStart=/usr/bin/weston --backend=drm-backend.so --idle-time=0
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target
+~~~~
+
+

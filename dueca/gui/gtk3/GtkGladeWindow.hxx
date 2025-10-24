@@ -24,6 +24,8 @@
 #include "GladeException.hxx"
 #include <boost/any.hpp>
 #include <dueca/debug.h>
+#include <CommObjectReader.hxx>
+#include <CommObjectWriter.hxx>
 
 // Forward declaration
 namespace Gtk {
@@ -234,15 +236,13 @@ struct GladeCallbackTable
 
     // set the default values of a TestObject on the interface
     TestObject deflt;
-    CommObjectReader reader("TestObject", reinterpret_cast<void*>(&deflt));
-    mywindow.setValues(reader, "mywidgets_%s", NULL, true);
+    mywindow.setValues(deflt, "mywidgets_%s", NULL, true);
 
     // .... later, after changes, read the values from the interface
     // send over a channel if applicable
     {
-      // a DCOWriter is also a CommObjectWriter
-      DCOWriter writer(w_mytoken, ts);
-      mywindow.getValues(writer, "mywidgets_%s", NULL, true);
+      DataWriter writer(w_mytoken, ts);
+      mywindow.getValues(writer.data(), "mywidgets_%s", NULL, true);
     }
     @endcode
 
@@ -510,8 +510,9 @@ public:
                        widget and datatype do not match.
       @returns         The number of successfully set values
    */
-  unsigned setValues(CommObjectReader &dco, const char *format,
-                     const char *arrformat = NULL, bool warn = false);
+  template <typename DCO>
+  unsigned setValues(DCO &dco, const char *format, const char *arrformat = NULL,
+                     bool warn = false);
 
   /** Find the current state of the interface and push into a DCO object.
 
@@ -530,8 +531,9 @@ public:
                        widget and datatype do not match.
       @returns         The number of successfully read values
    */
-  unsigned getValues(CommObjectWriter &dco, const char *format,
-                     const char *arrformat = NULL, bool warn = false);
+  template <typename DCO>
+  unsigned getValues(DCO &dco, const char *format, const char *arrformat = NULL,
+                     bool warn = false);
 
   /** Initialize a text combobox with a given list or array of values.
 
@@ -718,6 +720,47 @@ bool GtkGladeWindow::setValue(const T &value, const char *name, bool warn)
   boost::any _v = value;
   auto res = _setValue(name, name, _v, warn);
   return res;
+}
+// claim there is a specialized version
+template <>
+unsigned GtkGladeWindow::getValues<CommObjectWriter>(CommObjectWriter &cow,
+                                                     const char *format,
+                                                     const char *arrformat,
+                                                     bool warn);
+// claim there is a specialized version
+template <>
+unsigned GtkGladeWindow::getValues<DCOWriter>(DCOWriter &cow,
+                                              const char *format,
+                                              const char *arrformat, bool warn);
+
+// the generic version
+template <typename DCO>
+unsigned GtkGladeWindow::getValues(DCO &dco, const char *format,
+                                   const char *arrformat, bool warn)
+{
+  CommObjectWriter cow(dco);
+  return GtkGladeWindow::getValues(cow, format, arrformat, warn);
+}
+
+// claim there is a specialized version
+template <>
+unsigned GtkGladeWindow::setValues<CommObjectReader>(CommObjectReader &cow,
+                                                     const char *format,
+                                                     const char *arrformat,
+                                                     bool warn);
+// claim there is a specialized version
+template <>
+unsigned GtkGladeWindow::setValues<DCOReader>(DCOReader &cow,
+                                              const char *format,
+                                              const char *arrformat, bool warn);
+
+// the generic version
+template <typename DCO>
+unsigned GtkGladeWindow::setValues(DCO &dco, const char *format,
+                                   const char *arrformat, bool warn)
+{
+  CommObjectReader cor(dco);
+  return GtkGladeWindow::setValues(cor, format, arrformat, warn);
 }
 
 DUECA_NS_END
