@@ -24,6 +24,12 @@ run/*/*/**
 *.orig
 *.rej
 
+# sometime python scripts leave this
+__pycache__
+
+# clang remains
+.cache
+
 # the vscode folder
 .vscode/**
 
