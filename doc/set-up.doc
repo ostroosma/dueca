@@ -54,7 +54,7 @@ simulation, in which the module also communicates with the rest of the
 simulation.
 
 Control loading hardware is controlled by such a HardwareModule. Upon
-the simulaiton start, it will run through a sequence where it connects
+the simulation start, it will run through a sequence where it connects
 to the hardware, activates the hardware, and then brings it slowly to
 a neutral position. Only when that is ready the other modules in a
 simulation are started and communication starts.
@@ -115,8 +115,7 @@ three data elements of type double:
 \endcode
 
 For more details see \ref codegenerator
-The type of data needs to be declared in the file's header, standard C++
-types (double, float, etc.) are available immediately.
+The type of data needs to be declared in the file's header.
 
 The following is a segment of what comes out of the code generator:
 
@@ -182,33 +181,32 @@ object.
 As was mentioned above, a channel handles a specific type of data, but
 channels can be set up for (almost) any type of data. Before DUECA
 2.0, several channel types existed. In DUECA 2.0 these were unified
-into a single, very flexible, channel. However, for most common use
-the good old channels are still sufficient. The programming interface
-for these types is still available, and since they are a bit simpler
-to understand and explain, the explanation starts with these two
-types:
+into a single, very flexible, channel.
+
+The older DUECA versions used two different types of channel, one for 
+stream data, and the other for event data. Although additional 
+variations are possible with the new DUECA channel code, this old
+distinction is a good starting point for discussing these two main 
+channel variants:
 
 <ul>
 
-<li> StreamChannel. A stream channel treats its data as a continuous
+<li> A channel with "stream" data. A stream channel treats its data as a continuous
 update of some output or state value. This approximates a continuous,
 analogue value in the real world. The stream data should be updated
 regularly, and at each time it has a single, specific value. When
 stream data is updated, it is updated for a logical time <i>span</i>,
 indicating the period for which the data is considered valid.
 
-<li> EventChannel. An event channel handles "event" data. An event is
+<li> A channel with "event" data. An event channel handles "event" data. An event is
 an occurrence that is unique in time, has no "duration", and it has
 some data associated with it. Event data is associated with a single
-point in time, and in a specific channel, multiple events may be
-associated with the same time. There may of course also be times that
-there are no events written in the channel.
+point in time, and in a specific channel, and multiple events may be
+associated with the same time. Unlike stream data, where at any time in the 
+simulation there is a valid value for the data, there may of course also be times that
+there are no events, and nothing is written in the channel.
 
 </ul>
-
-Typically, the PrimaryControls and AircraftOutput data mentioned in
-the \ref channels "previous section" would be implemented as stream
-data, while the KeyPress data would be sent as event data.
 
 \section highleveldesing Going about a design
 

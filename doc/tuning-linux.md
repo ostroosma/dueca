@@ -669,15 +669,16 @@ it needs a configuration `.config/weston.ini`
 xwayland=true
 idle-time=0
 shell=kiosk-shell.so
+backend=drm-backend.so
 
 [shell]
 panel-location=none
 
 [autolaunch]
-path=/usr/bin/swayimg my-cool-background.png
+path=/home/fltsim/bin/background
 ~~~~
 
-The service file:
+The service file (for now):
 
 ~~~~{.ini}
 [Unit]
@@ -688,10 +689,7 @@ After=systemd-user-sessions.service
 [Service]
 User=fltsim
 Environment="XDG_RUNTIME_DIR=/run/user/1000"
-ExecStartPre=/bin/mkdir -p /run/user/1000
-ExecStartPre=/bin/chown fltsim:fltsim /run/user/1000
-ExecStartPre=/bin/chmod 0700 /run/user/1000
-ExecStart=/usr/bin/weston --backend=drm-backend.so --idle-time=0
+ExecStart=/usr/bin/weston
 Restart=always
 RestartSec=2
 
@@ -699,4 +697,7 @@ RestartSec=2
 WantedBy=multi-user.target
 ~~~~
 
+When trying this on ubuntu 24.04 with nvidia card and driver, it appeared
+that performance was significantly lower than with X11. Any ideas of fixes for
+this are appreciated.
 

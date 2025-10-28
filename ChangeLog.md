@@ -14,6 +14,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
   References to the dependent objects (arguments to module/scriptcreatable)
   are stored in the objects/modules, so that these are deleted after the
   modules are deleted.
+- Enable direct use of DCO objects with gtk window set/getValues
+- Fixes for DCO objects with vectors of enums
+- Documentation on configuring wayland kiosk mode
 
 ## [4.2.4] - 2025-08-20
 
