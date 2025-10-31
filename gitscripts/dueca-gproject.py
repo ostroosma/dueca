@@ -503,9 +503,15 @@ class CloneProject:
                   "Clone failed, check url and access rights")
             sys.exit(-1)
         dprint("check out on branch", ns.version)
-        branch = repo.create_head('master', orig.refs.master)
-        branch.set_tracking_branch(orig.refs.master)
-        if ns.version != 'master':
+        if hasattr(orig.refs, 'master'):
+            branch = repo.create_head('master', orig.refs.master)
+            branch.set_tracking_branch(orig.refs.master)
+        elif hasattr(orig.refs, 'main'):
+            branch = repo.create_head('main', orig.refs.main)
+            branch.set_tracking_branch(orig.refs.main)
+            if ns.version == 'master':
+                ns.version = 'main'
+        if ns.version not in ('master', 'main'):
             branch = repo.create_head(ns.version, orig.refs[ns.version])
             branch.set_tracking_branch(orig.refs[ns.version])
 
