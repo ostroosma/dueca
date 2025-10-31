@@ -3,6 +3,12 @@
 echo "This script configures an un-optimized version, with debugging"
 echo "information. This is the configuration for development and testing."
 
+if [ -d /home/opt ]; then
+    PREFIX=/home/opt
+else
+    PREFIX=/tmp
+fi
+
 PYTHON=$(which python3)
 CWD=$(pwd)
 
@@ -58,7 +64,7 @@ pkg-config gtkmm-4.0 && GTKMM4SEL="-DBUILD_GTKMM4=ON"
 cmake $BUILDER \
       -DCMAKE_CXX_FLAGS="-DGLIB_VERSION_MIN_REQUIRED=GLIB_VERSION_2_30" \
       -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
-      -DCMAKE_INSTALL_PREFIX=/tmp \
+      -DCMAKE_INSTALL_PREFIX=${PREFIX} \
       -DCMAKE_BUILD_TYPE=Debug \
       -DBUILD_DOC=ON \
       -DDUECA_BUILD_SHARED=ON \
@@ -83,7 +89,7 @@ cmake $BUILDER \
       -DLOG_PACKING=ON \
       -DBUILD_HDF5=ON \
       -DFORCE_PYTHON_MALLOC=OFF \
-      -DPYSITEDIR:PATH=/tmp/lib/python${PYVERSION}/site-packages \
+      -DPYSITEDIR:PATH=${PREFIX}/lib/python${PYVERSION}/site-packages \
       -DDUECA_INSTALL_ENVIRONMENT=ON \
       -DFILLPACKER_SEND_ID=ON \
       -DTRY_INSTALL_PYTHON_BUILD=ON \
