@@ -31,7 +31,7 @@ from datetime import date
 from lxml import etree
 import duecautils
 from duecautils.modules import Modules, projectSplit, \
-    checkGitUrl, RootMap
+    checkGitUrl, RootMap, MainOrMaster
 from duecautils.machinemapping import NodeMachineMapping
 from duecautils.githandler import GitHandler
 from duecautils.verboseprint import dprint
@@ -434,7 +434,7 @@ class NewProject:
         # add the remote and push results
         if ns.remote:
             repo.create_remote('origin', RootMap().urlToAbsolute(ns.remote))
-            repo.git.push('--set-upstream', 'origin', 'master')
+            repo.git.push('--set-upstream', 'origin', 'main')
 
         print(f"Created new DUECA project {ns.name}")
 
@@ -503,14 +503,9 @@ class CloneProject:
                   "Clone failed, check url and access rights")
             sys.exit(-1)
         dprint("check out on branch", ns.version)
-        if hasattr(orig.refs, 'master'):
-            branch = repo.create_head('master', orig.refs.master)
-            branch.set_tracking_branch(orig.refs.master)
-        elif hasattr(orig.refs, 'main'):
-            branch = repo.create_head('main', orig.refs.main)
-            branch.set_tracking_branch(orig.refs.main)
-            if ns.version == 'master':
-                ns.version = 'main'
+        remotemain = MainOrMaster(orig)
+        if ns.version == 'master':
+            ns.version = str(remotemain)
         if ns.version not in ('master', 'main'):
             branch = repo.create_head(ns.version, orig.refs[ns.version])
             branch.set_tracking_branch(orig.refs[ns.version])
@@ -708,7 +703,7 @@ class BorrowModule(OnExistingProject):
         parser.add_argument(
             '--version', type=str,
             help="Version, branch, commit revision to borrow. If empty,"
-                 "the master branch is used.")
+                 "the main branch is used.")
         parser.set_defaults(handler=BorrowModule)
 
     def __call__(self, ns):
@@ -752,7 +747,7 @@ class BorrowProject(OnExistingProject):
         parser.add_argument(
             '--version', type=str,
             help="Version, branch, commit revision to borrow. If empty,"
-                 "the master branch is used.")
+                 "the main branch is used.")
         parser.set_defaults(handler=BorrowProject)
 
     def __call__(self, ns):
@@ -798,7 +793,7 @@ class CopyModule(OnExistingProject):
         parser.add_argument(
             '--version', type=str, default='HEAD',
             help="Version, branch, export revision to copy. If empty,"
-                 "the master branch is used.")
+                 "the main branch is used.")
         parser.add_argument(
             '--newname', type=str, default='',
             help="New name of the copied module, if specified")

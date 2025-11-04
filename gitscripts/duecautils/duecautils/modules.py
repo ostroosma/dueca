@@ -23,11 +23,12 @@ _decodeprj = re.compile(r"^(.+)/(.+)\.git$")
 _decodeurltag = re.compile(r"^([a-zA-Z0-9]+):///(.+)$")
 
 # common url type tags
-_urltags = set(('http', 'https', 'ssh', 'rsync', 'file'))
+_urltags = set(("http", "https", "ssh", "rsync", "file"))
 
 # folders
 _decodesparsefolder = re.compile(r"^(.+)/\*$")
-_deflt_sparse_folders = set(('run', 'comm-objects', '.config', 'build'))
+_deflt_sparse_folders = set(("run", "comm-objects", ".config", "build"))
+
 
 def projectSplit(url: str):
     """
@@ -57,6 +58,28 @@ def projectSplit(url: str):
         print(f"Cannot split project url from {url}", file=sys.stderr)
         raise e
 
+
+# helper class for selecting main or master in git repos
+class MainOrMaster(str):
+
+    def __init__(self, repo=None):
+
+        if repo is not None:
+            if hasattr(repo.refs, "main"):
+                self.mm = "main"
+                if hasattr(repo.refs, "master"):
+                    print(
+                        "Warning, repository has both main and master branches, choosing main",
+                        file=sys.stderr,
+                    )
+            elif hasattr(repo.refs, 'master'):
+                self.mm = 'master'
+            else:
+                self.mm = 'master'
+
+    def __str__(self):
+        return self.mm
+
 # singleton for the mapping of shortened URL's
 class RootMap(dict):
 
@@ -78,18 +101,19 @@ class RootMap(dict):
         Singleton instance of RootMap.
 
         """
-        if not hasattr(cls, 'instance'):
+        if not hasattr(cls, "instance"):
             cls.instance = super(RootMap, cls).__new__(cls)
 
             for k, v in os.environ.items():
-                if (k.startswith('DAPPS_GITROOT_') and \
-                    len(k) > len('DAPPS_GITROOT_')) or \
-                    k == 'DAPPS_GITROOT':
-                    if not v.endswith('/'):
+                if (
+                    k.startswith("DAPPS_GITROOT_") and len(k) > len("DAPPS_GITROOT_")
+                ) or k == "DAPPS_GITROOT":
+                    if not v.endswith("/"):
                         print(f"{k} should end with a '/'", file=sys.stderr)
-                        v = v + '/'
-                    key = (k == 'DAPPS_GITROOT' and 'dgr') or \
-                        'dgr'+k[len('DAPPS_GITROOT_'):]
+                        v = v + "/"
+                    key = (k == "DAPPS_GITROOT" and "dgr") or "dgr" + k[
+                        len("DAPPS_GITROOT_") :
+                    ]
                     cls.instance[key] = v
                     dprint(f"adding shortcut {key} for {v}")
 
@@ -109,12 +133,12 @@ class RootMap(dict):
         None.
 
         """
-        urlbase = '/'.join(url.split('/')[:-1]) + '/'
+        urlbase = "/".join(url.split("/")[:-1]) + "/"
         dprint(f"adding shortcut origin for {urlbase}")
-        if 'origin' in self and self['origin'] != urlbase:
+        if "origin" in self and self["origin"] != urlbase:
             print("Overwriting remote origin with", urlbase, file=sys.stderr)
-        self['origin'] = urlbase
-        self.prjname = url.split('/')[-1][:-4]
+        self["origin"] = urlbase
+        self.prjname = url.split("/")[-1][:-4]
         self.projecturl = url
 
     def setProjectName(self, name: str):
@@ -138,20 +162,20 @@ class RootMap(dict):
         """
         # Check if this shorthand has a translation
         for u, root in self.items():
-            if url.startswith(f'{u}:///'):
+            if url.startswith(f"{u}:///"):
                 dprint(f"Translating {url} to {root}{url[len(u)+4:]}")
-                return root + url[len(u)+4:]
+                return root + url[len(u) + 4 :]
 
         # When here, no translation. Check the URL, and warn if it looks
         # like one that needs to be translated
         _match = _decodeurltag.fullmatch(url)
         if _match and _match.group(1) not in _urltags:
             print(f"Warning, cannot convert short URL {url}", file=sys.stderr)
-            if _match.group(1).startswith('dgr'):
-                print("Check that you have the right DAPPS_GITROOT variable",
-                      file=sys.stderr)
-
-
+            if _match.group(1).startswith("dgr"):
+                print(
+                    "Check that you have the right DAPPS_GITROOT variable",
+                    file=sys.stderr,
+                )
 
         # Return unchanged
         return url
@@ -180,18 +204,18 @@ class RootMap(dict):
             prjname = _prjname
 
         # list of shorthand and url roots
-        ulist = [ (u, root)
-                  for u, root in self.items() if u  != 'dgr' ]
+        ulist = [(u, root) for u, root in self.items() if u != "dgr"]
         # ensure the generic dgr is last!
-        if 'dgr' in self:
-            ulist.append(('dgr', self['dgr']))
+        if "dgr" in self:
+            ulist.append(("dgr", self["dgr"]))
 
         for u, root in ulist:
-            dprint(f"project name: {prjname} from url: {url[len(root):-4]}")
-            if url.startswith(root) and \
-                (u != 'origin' or url[len(root):-4] == prjname):
+            # dprint(f"project name: {prjname} from url: {url[len(root):-4]}")
+            if url.startswith(root) and (
+                u != "origin" or url[len(root) : -4] == prjname
+            ):
                 dprint(f"Translating {url} to {u}:///{url[len(root):]}")
-                return f'{u}:///' + url[len(root):]
+                return f"{u}:///" + url[len(root) :]
         return url
 
 
@@ -199,7 +223,7 @@ class RootMap(dict):
 class ProjectRepo(git.Repo):
 
     def __new__(cls, initdir=None):
-        if not hasattr(cls, 'instance'):
+        if not hasattr(cls, "instance"):
             if initdir is None:
                 raise ValueError("Problem with ProjectRepo init")
             pname, pdir, dum = findProjectDir(initdir)
@@ -216,9 +240,7 @@ class ProjectRepo(git.Repo):
         return cls.instance
 
 
-
-
-def checkGitUrl(repo: git.Repo = None, url: str='', print=print):
+def checkGitUrl(repo: git.Repo = None, url: str = "", print=print):
     """
     Determine existence of a url, if this url is not found, try to
     find it in one of the pre-configured roots.
@@ -252,15 +274,18 @@ def checkGitUrl(repo: git.Repo = None, url: str='', print=print):
     urbase, project = projectSplit(url)
     for u, root in RootMap().items():
         try:
-            repo.git.ls_remote(f'{root}{project}.git')
-            dprint(f'Automatic re-map of url {url} to '
-                  f'{u}:///{project}.git (at {root})')
-            return f'{root}{project}.git', True
+            repo.git.ls_remote(f"{root}{project}.git")
+            dprint(
+                f"Automatic re-map of url {url} to " f"{u}:///{project}.git (at {root})"
+            )
+            return f"{root}{project}.git", True
         except git.GitCommandError as e:
             dprint(f"No luck finding '{root}/{project}.git, git error {e}'")
-    print(f"Cannot find url {url}, incomplete refresh, check modules.xml",
-          file=sys.stderr)
-    return '', False
+    print(
+        f"Cannot find url {url}, incomplete refresh, check modules.xml", file=sys.stderr
+    )
+    return "", False
+
 
 def findProjectDir(initdir):
 
@@ -269,14 +294,15 @@ def findProjectDir(initdir):
     else:
         curpath = os.getcwd().split(os.sep)
 
-
     inprojectdir = True
     while len(curpath):
-        projectdir = '/'.join(curpath)
-        if os.path.exists(f'{projectdir}/.config/machine') and \
-            os.path.exists(f'{projectdir}/CMakeLists.txt') and \
-            os.path.isdir(f'{projectdir}/run'):
-                break
+        projectdir = "/".join(curpath)
+        if (
+            os.path.exists(f"{projectdir}/.config/machine")
+            and os.path.exists(f"{projectdir}/CMakeLists.txt")
+            and os.path.isdir(f"{projectdir}/run")
+        ):
+            break
         del curpath[-1]
         inprojectdir = False
 
@@ -286,25 +312,26 @@ def findProjectDir(initdir):
 
     return curpath[-1], projectdir, inprojectdir
 
+
 class Module:
 
-    def __init__(self, name=None, xmlnode=None, xmlroot=None,
-                 pseudo=False, inactive=False):
+    def __init__(
+        self, name=None, xmlnode=None, xmlroot=None, pseudo=False, inactive=False
+    ):
 
         if xmlnode is not None:
             # read from the given xml node
             self.xmlnode = xmlnode
         elif xmlroot is not None and name is not None:
             # new module create/define xml node
-            self.xmlnode = etree.SubElement(xmlroot, 'module')
+            self.xmlnode = etree.SubElement(xmlroot, "module")
             self.xmlnode.text = name
             if pseudo:
                 self.xmlnode.set("pseudo", "true")
             if inactive:
                 self.xmlnode.set("inactive", "true")
         else:
-            raise ValueError(
-                "Create Module representation from xml, or name and root")
+            raise ValueError("Create Module representation from xml, or name and root")
 
     def delete(self):
         if self.xmlnode is not None:
@@ -315,13 +342,13 @@ class Module:
         return self.xmlnode.text.strip()
 
     def needbuild(self):
-        return not XML_interpret_bool(self.xmlnode.get("pseudo", False)) \
-            and not XML_interpret_bool(self.xmlnode.get("inactive", False))
+        return not XML_interpret_bool(
+            self.xmlnode.get("pseudo", False)
+        ) and not XML_interpret_bool(self.xmlnode.get("inactive", False))
 
 
 class Project:
-    def __init__(self, url=None, version=None,
-                 xmlnode=None, xmlroot=None):
+    def __init__(self, url=None, version=None, xmlnode=None, xmlroot=None):
 
         self.repo_cycle = 0
         self.xmlnode = xmlnode
@@ -348,20 +375,20 @@ class Project:
         if self.xmlnode is None:
 
             # create a new node and fill it
-            self.xmlnode = etree.SubElement(xmlroot, 'project')
+            self.xmlnode = etree.SubElement(xmlroot, "project")
 
             # the own project has an implicit URL
             if self.name == RootMap().prjname:
                 self.xmlnode["main"] = True
             else:
-                u = etree.SubElement(self.xmlnode, 'url')
+                u = etree.SubElement(self.xmlnode, "url")
                 u.text = RootMap().urlToRelative(self.url)
 
             if self.version:
-                v = etree.SubElement(self.xmlnode, 'version')
+                v = etree.SubElement(self.xmlnode, "version")
                 v.text = self.version
             for m in self.modules:
-                n = etree.SubElement(self.xmlnode, 'module')
+                n = etree.SubElement(self.xmlnode, "module")
                 n.text = m
             self.clean = True
             return
@@ -379,21 +406,21 @@ class Project:
                     self.url = RootMap().projecturl
                 except AttributeError:
                     self.name = RootMap().prjname
-                    self.url = ''
+                    self.url = ""
 
             for elt in self.xmlnode:
 
                 if XML_comment(elt):
                     continue
 
-                if XML_tag(elt, 'url'):
+                if XML_tag(elt, "url"):
 
                     self.url = RootMap().urlToAbsolute(elt.text.strip())
 
-                elif XML_tag(elt, 'version'):
+                elif XML_tag(elt, "version"):
                     self.version = elt.text.strip()
 
-                elif XML_tag(elt, 'module'):
+                elif XML_tag(elt, "module"):
                     self.modules.append(Module(xmlnode=elt))
 
                 else:
@@ -401,7 +428,7 @@ class Project:
 
             if self.url is None:
                 raise ValueError("Need <url> tag in <project>")
-            elif getattr(self, 'name', None) is None:
+            elif getattr(self, "name", None) is None:
                 self.name = projectSplit(self.url)[1]
 
         except Exception as e:
@@ -414,28 +441,27 @@ class Project:
             del self.modules[idx]
             dprint(f"Deleted module {module} from project {self.name}")
         except ValueError:
-            print(f"Delete: Cannot find {module} in {self.name}",
-                  file=sys.stderr)
+            print(f"Delete: Cannot find {module} in {self.name}", file=sys.stderr)
 
     def createModule(self, module: str, url: str, pseudo, inactive):
 
-        if url and RootMap().urlToAbsolute(self.url) != \
-            RootMap().urlToAbsolute(url):
+        if url and RootMap().urlToAbsolute(self.url) != RootMap().urlToAbsolute(url):
             raise Exception(
-                f'URL conflict trying to extend modules from {self.name}\n'
-                f' old url: {self.url} ({RootMap().urlToAbsolute(self.url)})\n'
-                f' new url: {url} ({RootMap().urlToAbsolute(url)})')
-        m = Module(name=module, xmlroot=self.xmlnode,
-                   pseudo=pseudo, inactive=inactive)
+                f"URL conflict trying to extend modules from {self.name}\n"
+                f" old url: {self.url} ({RootMap().urlToAbsolute(self.url)})\n"
+                f" new url: {url} ({RootMap().urlToAbsolute(url)})"
+            )
+        m = Module(name=module, xmlroot=self.xmlnode, pseudo=pseudo, inactive=inactive)
         self.modules.append(m)
         dprint(f"Added module {module} to project {self.name}")
 
     def hasModule(self, module: str):
         return module in map(str, self.modules)
 
+
 class Modules:
 
-    def __init__(self, calldir='.', mclass=None):
+    def __init__(self, calldir=".", mclass=None):
 
         # get project folder
         self.clean = None
@@ -447,13 +473,13 @@ class Modules:
 
         # find the machine class
         if mclass is None:
-            with open(f'{self.projectdir}/.config/machine', 'r') as f:
+            with open(f"{self.projectdir}/.config/machine", "r") as f:
                 self.mclass = f.readline().strip()
         else:
             self.mclass = mclass
 
         # file name defining the modules list
-        self.fname = f'{self.projectdir}/.config/class/{self.mclass}/modules.xml'
+        self.fname = f"{self.projectdir}/.config/class/{self.mclass}/modules.xml"
 
         # for clean is None, this reads the modules list
         self._sync()
@@ -461,18 +487,18 @@ class Modules:
     def _updateOwnSparse(self, modules: list) -> bool:
 
         # get the repository for this folder
-        rrepo = git.Repo('.')
+        rrepo = git.Repo(".")
 
         # is this a sparse checkout?
         cread = rrepo.config_reader()
-        if not cread.get_value('core', 'sparseCheckout', False):
+        if not cread.get_value("core", "sparseCheckout", False):
             return False
 
         # check whether the modules are all in the sparse list
         folders = set([str(m) for m in modules])
 
         try:
-            with open('.git/info/sparse-checkout', 'r') as ms:
+            with open(".git/info/sparse-checkout", "r") as ms:
                 for l in ms:
                     _match = _decodesparsefolder.fullmatch(l.strip())
                     if _match and _match.group(1) in folders:
@@ -483,18 +509,19 @@ class Modules:
                     else:
                         dprint(f"No match {l.strip()} in sparse")
 
-
             # check if a folder needs to be added
             if folders:
-                with open('.git/info/sparse-checkout', 'a') as ms:
+                with open(".git/info/sparse-checkout", "a") as ms:
                     for f in folders:
                         dprint(f"Adding line to sparse: {f}/*\n")
                         ms.write(f"{f}/*\n")
                 return True
 
         except FileNotFoundError:
-            print("Cannot open .git/info/sparse-checkout file; check your"
-                  " cloned copy", file=sys.stderr)
+            print(
+                "Cannot open .git/info/sparse-checkout file; check your" " cloned copy",
+                file=sys.stderr,
+            )
         return False
 
     def _addToSparse(self, prj: Project, lines: list) -> None:
@@ -517,33 +544,34 @@ class Modules:
         """
 
         # when the folder is not present, create it, and clone the upstream
-        if not os.path.isdir(f'../{prj.name}'):
+        if not os.path.isdir(f"../{prj.name}"):
 
             # folder not present? make and init
             dprint("adding project", prj.name)
 
             # create and initialize folder / git
-            os.mkdir(f'../{prj.name}')
-            rrepo = git.Repo.init(f'../{prj.name}')
+            os.mkdir(f"../{prj.name}")
+            rrepo = git.Repo.init(f"../{prj.name}")
             if self.auto_url:
                 prj.url, changes = checkGitUrl(rrepo, prj.url)
                 if changes:
                     for e in prj.xmlnode:
-                        if XML_tag(e, 'url'):
+                        if XML_tag(e, "url"):
                             e.text = RootMap().urlToRelative(prj.url)
                 self.clean = False
 
-            rrepo.create_remote('origin', prj.url)
-            rrepo.git.config('core.sparseCheckout', 'true')
+            rrepo.create_remote("origin", prj.url)
+            rrepo.git.config("core.sparseCheckout", "true")
         else:
 
             # folder already there, get the repo object
-            rrepo = git.Repo(f'../{prj.name}')
+            rrepo = git.Repo(f"../{prj.name}")
 
         # early exit for own project, unless it is checked out sparse
         cread = rrepo.config_reader()
-        if prj.name == self.ownproject and  \
-            not cread.get_value('core', 'sparseCheckout', False):
+        if prj.name == self.ownproject and not cread.get_value(
+            "core", "sparseCheckout", False
+        ):
             return
 
         # copy the lines to a set, so that any double addition can be
@@ -552,24 +580,23 @@ class Modules:
 
         # open the sparse_checkout file, check what is already there
         try:
-            with open(f'../{prj.name}/.git/info/sparse-checkout', 'r') as ms:
+            with open(f"../{prj.name}/.git/info/sparse-checkout", "r") as ms:
                 for l in ms:
                     if l.strip() in to_add:
                         to_add.remove(l.strip())
 
             # add any remaining lines
             if len(to_add):
-                with open(f'../{prj.name}/.git/info/sparse-checkout',
-                          'a') as ms:
+                with open(f"../{prj.name}/.git/info/sparse-checkout", "a") as ms:
                     for l in to_add:
-                        ms.write(l + '\n')
+                        ms.write(l + "\n")
 
         # simply create when it was not yet there
         except FileNotFoundError:
-            with open(f'../{prj.name}/.git/info/sparse-checkout', 'w') as ms:
-                ms.write('/README*\n')
+            with open(f"../{prj.name}/.git/info/sparse-checkout", "w") as ms:
+                ms.write("/README*\n")
                 for l in to_add:
-                    ms.write(l + '\n')
+                    ms.write(l + "\n")
 
         # what version/branch are we currently on
         branch = str(rrepo.active_branch)
@@ -580,38 +607,44 @@ class Modules:
             version = branch
         else:
             # for all others, listen to the version in the modules.xml file
-            version = (prj.version != 'HEAD' and prj.version) or 'master'
+            version = (prj.version != "HEAD" and prj.version) or MainOrMaster(rrepo)
             if version != branch:
                 print(
                     f"Borrowed code from {prj.name} was on branch:{branch}"
                     f" changing to {version} based on modules.xml",
-                    file=sys.stderr)
+                    file=sys.stderr,
+                )
 
         # get tags and the items in sparse checkout
         try:
             rrepo.remote().fetch()
         except git.GitCommandError as e:
             print(
-                f'Failing to get code for borrowed project {prj.name}\n'
-                f'from url {prj.url}, fixes / to check:\n'
-                '- Is this url valid, if not, maybe set a DAPPS_GITROOT_xxx\n'
-                '  variable.\n'
-                '- Is the entry in .config/class/<class>/modules.xml valid?\n'
-                '- Check that you have access to the url\n'
-                '- If you changed the url, remove the borrowed project\n'
-                f'  (rm -rf ../{prj.name})\n', file=sys.stderr)
+                f"Failing to get code for borrowed project {prj.name}\n"
+                f"from url {prj.url}, fixes / to check:\n"
+                "- Is this url valid, if not, maybe set a DAPPS_GITROOT_xxx\n"
+                "  variable.\n"
+                "- Is the entry in .config/class/<class>/modules.xml valid?\n"
+                "- Check that you have access to the url\n"
+                "- If you changed the url, remove the borrowed project\n"
+                f"  (rm -rf ../{prj.name})\n",
+                file=sys.stderr,
+            )
             dprint(f"Git error message {e}")
 
         # create a branch if needed
         if version not in rrepo.heads:
             try:
-                dprint(f"In {prj.name}, creating branch {version}, adding to {rrepo.heads}")
+                dprint(
+                    f"In {prj.name}, creating branch {version}, adding to {rrepo.heads}"
+                )
                 branch = rrepo.create_head(version, rrepo.remote().refs[version])
                 branch.set_tracking_branch(rrepo.remote().refs[version])
             except Exception as e:
                 print(
-                    f'Cannot create requested branch {version} in {prj.name}\n'
-                    f'Error {e}')
+                    f"Cannot create requested branch {version} in {prj.name}\n"
+                    f"Error {e}"
+                )
                 raise e
 
         # and check it out
@@ -633,7 +666,7 @@ class Modules:
             # rrepo.remote().fetch()      # fetch, but why?
 
             # figure out all local branches
-            #for br in rrepo.heads:
+            # for br in rrepo.heads:
             #    if br.name == version:
             #        # make sure we have this one
             #        br.checkout()
@@ -642,22 +675,22 @@ class Modules:
             #        return
 
             # there was no such branch locally, create with track
-            #rrepo.git.checkout(f'origin/{version}', track=True)
-            #prj.repo_cycle = self.repo_cycle
+            # rrepo.git.checkout(f'origin/{version}', track=True)
+            # prj.repo_cycle = self.repo_cycle
 
         except git.exc.GitCommandError as e:
-            print(f"Cannot pull/checkout comm-objects in {prj.name}, {e}",
-                  file=sys.stderr)
+            print(
+                f"Cannot pull/checkout comm-objects in {prj.name}, {e}", file=sys.stderr
+            )
 
     def _analyseCommObjectFile(self, p, m, call_for_new_project=None):
-        if os.path.isfile(f'{self.projectdir}/../{p}/{m}/CMakeLists.txt'):
+        if os.path.isfile(f"{self.projectdir}/../{p}/{m}/CMakeLists.txt"):
             dprint(f"Refresh dco, analysing {p}/{m}/comm-objects.lst")
-            colist = CommObjectsList(f'{self.projectdir}/../{p}/{m}')
+            colist = CommObjectsList(f"{self.projectdir}/../{p}/{m}")
             for idco in colist:
                 prj = idco.base_project
                 dco = idco.dco
-                if prj not in self.comm_borrows and \
-                    call_for_new_project is not None:
+                if prj not in self.comm_borrows and call_for_new_project is not None:
                     dprint(f"Refresh dco, chain to {prj} for {dco}")
                     self.comm_borrows[prj] = set((dco,))
                     call_for_new_project(prj)
@@ -693,23 +726,25 @@ class Modules:
             raise Exception(
                 f"No URL known for DCO objects borrowed from {p},"
                 f" add an entry to {self.projectdir}/"
-                f".config/class/{self.mclass}/modules.xml")
+                f".config/class/{self.mclass}/modules.xml"
+            )
 
         # is it there already
-        self._addToSparse(prj, ['comm-objects/*'])
+        self._addToSparse(prj, ["comm-objects/*"])
 
         # now recursively run the comm-objects.lst in comm-objects
-        self._analyseCommObjectFile(p, 'comm-objects',
-                                    self._chainCommObjectDeps)
+        self._analyseCommObjectFile(p, "comm-objects", self._chainCommObjectDeps)
 
-    def _noChainCommObjectDeps(self, p:str):
+    def _noChainCommObjectDeps(self, p: str):
 
         prj = self.projects.get(p, None)
         if prj is None:
-            print(f"Not recursing, but likely need DCO from {p}"
-                  f" adding an entry to {self.projectdir}/"
-                  f".config/class/{self.mclass}/modules.xml",
-                  file=sys.stderr)
+            print(
+                f"Not recursing, but likely need DCO from {p}"
+                f" adding an entry to {self.projectdir}/"
+                f".config/class/{self.mclass}/modules.xml",
+                file=sys.stderr,
+            )
 
     def _chainCommObjectDepsOrAddProject(self, p: str):
 
@@ -717,30 +752,31 @@ class Modules:
         prj = self.projects.get(p, None)
         if prj is None:
             try:
-                self.addModule(p, None, url=f'dgr:///{p}.git')
+                self.addModule(p, None, url=f"dgr:///{p}.git")
                 prj = self.projects.get(p, None)
             except Exception as e:
                 raise Exception(
                     f"Cannot automatically add DCO object project borrow {p}"
-                    f" to modules.xml, error {e}")
+                    f" to modules.xml, error {e}"
+                )
 
         # is it there already
-        self._addToSparse(prj, ['comm-objects/*'])
+        self._addToSparse(prj, ["comm-objects/*"])
 
         # now recursively run the comm-objects.lst in comm-objects
-        self._analyseCommObjectFile(p, 'comm-objects',
-                                    self._chainCommObjectDeps)
+        self._analyseCommObjectFile(p, "comm-objects", self._chainCommObjectDeps)
 
-    def _noChainCommObjectDepsOrAddProject(self, p:str):
+    def _noChainCommObjectDepsOrAddProject(self, p: str):
 
         prj = self.projects.get(p, None)
         if prj is None:
             try:
-                self.addModule(prj, None, url=f'dgr:///{prj}.git')
+                self.addModule(prj, None, url=f"dgr:///{prj}.git")
             except Exception as e:
                 raise Exception(
                     f"Cannot automatically add DCO object project borrow {prj}"
-                    f" to modules.xml, error {e}")
+                    f" to modules.xml, error {e}"
+                )
 
     def _sync(self):
 
@@ -756,25 +792,28 @@ class Modules:
             # read from file
             try:
                 parser = etree.XMLParser(remove_blank_text=True)
-                with open(self.fname, 'rb') as mds:
+                with open(self.fname, "rb") as mds:
 
                     self.xmltree = etree.XML(mds.read(), parser=parser)
                     for node in self.xmltree:
                         if XML_comment(node):
                             pass
-                        elif XML_tag(node, 'project'):
-                            #dprint(f"project {project}")
+                        elif XML_tag(node, "project"):
+                            # dprint(f"project {project}")
                             prj = Project(xmlnode=node)
-                            #dprint(f"project {prj.name}, modules {prj.modules}")
+                            # dprint(f"project {prj.name}, modules {prj.modules}")
                             if prj.name in self.projects:
                                 raise ValueError(
-                                    f"Multiple entries for project {prj.name}")
+                                    f"Multiple entries for project {prj.name}"
+                                )
                             self.projects[prj.name] = prj
                         else:
                             raise XML_TagUnknown(node)
             except Exception as e:
-                print("Failed to parse module information"
-                      f" from {self.fname}: {e}", file=sys.stderr)
+                print(
+                    "Failed to parse module information" f" from {self.fname}: {e}",
+                    file=sys.stderr,
+                )
                 raise e
 
             self.clean = True
@@ -782,85 +821,88 @@ class Modules:
 
         # try a rename of the current file
         try:
-            os.rename(self.fname, self.fname + '~')
+            os.rename(self.fname, self.fname + "~")
         except FileNotFoundError:
             pass
 
         # write back to file
         dprint(f"Re-writing {self.fname}")
         etree.ElementTree(self.xmltree).write(
-                self.fname, pretty_print=True, encoding='utf-8',
-                xml_declaration=True)
+            self.fname, pretty_print=True, encoding="utf-8", xml_declaration=True
+        )
         self.clean = True
 
     def isNewModule(self, project, module):
-        return project not in self.projects or \
-            module not in self.projects[project].modules
+        return (
+            project not in self.projects or module not in self.projects[project].modules
+        )
 
     def isNewProject(self, project):
         return project not in self.projects
 
     # not good enough yet
-    def addModule(self, project, module, version=None, url=None,
-                  pseudo=False, inactive=False):
-        if project in self.projects and \
-            (module is None or self.projects[project].hasModule(module)):
+    def addModule(
+        self, project, module, version=None, url=None, pseudo=False, inactive=False
+    ):
+        if project in self.projects and (
+            module is None or self.projects[project].hasModule(module)
+        ):
             raise Exception(
                 f"Module {project}/{module} already in"
-                f" .config/class/{self.mclass}/modules.xml")
+                f" .config/class/{self.mclass}/modules.xml"
+            )
 
         if project not in self.projects:
             if not url:
                 raise Exception(f"Supply project URL for new module {module}")
             dprint(f"Adding a project {project} at {url}")
-            self.projects[project] = Project(url=url, version=version,
-                                             xmlroot=self.xmltree)
+            self.projects[project] = Project(
+                url=url, version=version, xmlroot=self.xmltree
+            )
             if module is not None:
-                self.projects[project].createModule(module, url,
-                                                    pseudo, inactive)
+                self.projects[project].createModule(module, url, pseudo, inactive)
         else:
-            self.projects[project].createModule(module, url,
-                                                pseudo, inactive)
+            self.projects[project].createModule(module, url, pseudo, inactive)
 
         self.clean = False
         self._sync()
 
     def deleteModule(self, project, module):
-        if project in self.projects and \
-            self.projects[project].hasModule(module):
+        if project in self.projects and self.projects[project].hasModule(module):
             self.projects[project].deleteModule(module)
         self.clean = False
         self._sync()
 
     def getOwnModules(self, project=None, onlycode=False):
-        #dprint(f"getOwnModules from {self.projects}")
+        # dprint(f"getOwnModules from {self.projects}")
         if project is None:
             project = self.ownproject
 
         if project in self.projects.keys():
-            #dprint(f"getOwnModules for {project}")
+            # dprint(f"getOwnModules for {project}")
             return self.projects[project].modules
-        #dprint(f"getOwnModules project {project} not found")
+        # dprint(f"getOwnModules project {project} not found")
         return []
 
     def hasModule(self, project, module):
-        return project in self.projects and \
-            self.projects[project].hasModule(module)
+        return project in self.projects and self.projects[project].hasModule(module)
 
     def refreshBorrowed(self, auto_dco=False, auto_url=False):
 
-        #print(self.projects)
+        # print(self.projects)
         self.repo_cycle = self.repo_cycle + 1
         self.auto_url = auto_url
 
-        for (name, p) in self.projects.items():
+        for name, p in self.projects.items():
 
             if name == self.ownproject:
 
                 if self._updateOwnSparse(p.modules):
                     print(
-"""New module(s) found among the own project's modules and added to the
-sparse-checkout file. Re-run 'git pull'""", file=sys.stderr)
+                        """New module(s) found among the own project's modules and added to the
+sparse-checkout file. Re-run 'git pull'""",
+                        file=sys.stderr,
+                    )
                 # dprint(f"Refresh own modules {self.ownproject}, not borrowing")
                 # rrepo = ProjectRepo().repo
                 # version = (p.version != 'HEAD' and p.version) or 'master'
@@ -874,7 +916,7 @@ sparse-checkout file. Re-run 'git pull'""", file=sys.stderr)
 
             # addToSparse creates the borrowed repo if needed, does a
             # fetch for the project's claimed version, and a checkout
-            self._addToSparse(p, [f'{m}/*' for m in p.modules])
+            self._addToSparse(p, [f"{m}/*" for m in p.modules])
 
             dprint(f"Pulled {len(p.modules)} module(s) from {name}")
 
@@ -888,18 +930,22 @@ sparse-checkout file. Re-run 'git pull'""", file=sys.stderr)
         self.auto_url = False
 
     def compactPrint(self, only_active=False):
-        lst = [ f'{prj.name}/{m}' for
-               prj in self.projects.values()
-                   for m in prj.modules
-                   if ((not only_active) or m.needbuild()) ]
-        return ';'.join(lst)
+        lst = [
+            f"{prj.name}/{m}"
+            for prj in self.projects.values()
+            for m in prj.modules
+            if ((not only_active) or m.needbuild())
+        ]
+        return ";".join(lst)
 
     def debugPrint(self, only_active=False):
-        lst = [ f'{prj.name}/{m}' for
-               prj in self.projects.values()
-                   for m in prj.modules
-                   if ((not only_active) or m.needbuild()) ]
-        return '\n'.join(lst)
+        lst = [
+            f"{prj.name}/{m}"
+            for prj in self.projects.values()
+            for m in prj.modules
+            if ((not only_active) or m.needbuild())
+        ]
+        return "\n".join(lst)
 
     def relName(self, fname: str):
         """
@@ -915,18 +961,19 @@ sparse-checkout file. Re-run 'git pull'""", file=sys.stderr)
         str.
 
         """
-        if fname[0] != '/':
+        if fname[0] != "/":
             return fname
         nelts = len(self.projectdir.split(os.sep)) - 1
         return os.sep.join(fname.split(os.sep)[nelts:])
 
     def __iter__(self):
-        #mlist = []
+        # mlist = []
         ##for p, ml in self.projects.items():
         #    for m in ml.modules:
         #        mlist.append(dict(project=p, module=m.xmlnode.text))
-        mlist = [ dict(project=p, module=m.xmlnode.text)
-            for p, ml in self.projects.items() for m in ml.modules ]
+        mlist = [
+            dict(project=p, module=m.xmlnode.text)
+            for p, ml in self.projects.items()
+            for m in ml.modules
+        ]
         return iter(mlist)
-
-
