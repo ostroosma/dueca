@@ -30,5 +30,5 @@ install(PROGRAMS dueca-scheme-to-python.py DESTINATION ${CMAKE_INSTALL_BINDIR}
 install(FILES ${PYSCRIPTS}
   DESTINATION ${CMAKE_INSTALL_DATADIR}/dueca)
 
-install(PROGRAMS dueca-gproject.py DESTINATION ${CMAKE_INSTALL_BINDIR}
+install(PROGRAMS dueca_gproject.py DESTINATION ${CMAKE_INSTALL_BINDIR}
   RENAME dueca-gproject)

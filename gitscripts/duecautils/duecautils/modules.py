@@ -552,6 +552,7 @@ class Modules:
             # create and initialize folder / git
             os.mkdir(f"../{prj.name}")
             rrepo = git.Repo.init(f"../{prj.name}")
+            rrepo.active_branch.rename('main')
             if self.auto_url:
                 prj.url, changes = checkGitUrl(rrepo, prj.url)
                 if changes:
@@ -601,20 +602,6 @@ class Modules:
         # what version/branch are we currently on
         branch = str(rrepo.active_branch)
 
-        # version, branch or tag
-        if prj.name == self.ownproject:
-            # for the "own" project, select the git-selected version
-            version = branch
-        else:
-            # for all others, listen to the version in the modules.xml file
-            version = (prj.version != "HEAD" and prj.version) or MainOrMaster(rrepo)
-            if version != branch:
-                print(
-                    f"Borrowed code from {prj.name} was on branch:{branch}"
-                    f" changing to {version} based on modules.xml",
-                    file=sys.stderr,
-                )
-
         # get tags and the items in sparse checkout
         try:
             rrepo.remote().fetch()
@@ -631,6 +618,21 @@ class Modules:
                 file=sys.stderr,
             )
             dprint(f"Git error message {e}")
+
+        # version, branch or tag
+        if prj.name == self.ownproject:
+            # for the "own" project, select the git-selected version
+            version = branch
+        else:
+            # for all others, listen to the version in the modules.xml file
+            version = (prj.version != "HEAD" and prj.version) or \
+                str(MainOrMaster(rrepo.remotes.origin))
+            if version != branch:
+                print(
+                    f"Borrowed code from {prj.name} was on branch:{branch}"
+                    f" changing to {version} based on modules.xml",
+                    file=sys.stderr,
+                )
 
         # create a branch if needed
         if version not in rrepo.heads:

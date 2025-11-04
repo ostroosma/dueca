@@ -25,10 +25,21 @@ class GitHandler(git.Repo):
     def copyModule(self, project, module, newname, version, url=None):
         tf = tempfile.mkstemp(suffix='.tar')
         url = url or self.remote()
-        self.git.archive(
-            '--format=tar', f'--remote={url}',
-            f'{version}:{module}/',
-            f'--prefix={newname or module}/', f'--output={tf[1]}')
+        try:
+            self.git.archive(
+                '--format=tar', f'--remote={url}',
+                f'{version}:{module}/',
+                f'--prefix={newname or module}/', f'--output={tf[1]}')
+        except git.exc.GitCommandError as e:
+            if version == 'main':
+                # also try master
+                self.git.archive(
+                    '--format=tar', f'--remote={url}',
+                    f'master:{module}/',
+                    f'--prefix={newname or module}/', f'--output={tf[1]}')
+            else:
+                raise e
+
         res = subprocess.call(['tar', '-xvf', tf[1]])
         self.addFolder(newname)
         if res:

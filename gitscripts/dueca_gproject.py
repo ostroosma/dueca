@@ -414,6 +414,7 @@ class NewProject:
         # initialize git repository
         repo = git.Repo.init(
             '{project}/{project}'.format(project=ns.name))
+        repo.active_branch.rename("main")
 
         # add the default config files
         cnfdef = ChainMap(
@@ -791,7 +792,7 @@ class CopyModule(OnExistingProject):
             '--remote', type=str, required=True,
             help="Remote URL from where the module is copied.")
         parser.add_argument(
-            '--version', type=str, default='HEAD',
+            '--version', type=str, default='main',
             help="Version, branch, export revision to copy. If empty,"
                  "the main branch is used.")
         parser.add_argument(
@@ -1554,20 +1555,23 @@ BuildProject.args(subparsers)
 #    'policies',
 #    '--policiesurl=file:///home/repa/dueca/test/gitscript/example-policies.xml']
 
-argcomplete.autocomplete(parser)
-pres = parser.parse_args(sys.argv[1:])
-#pres = parser.parse_args(testargs)
+if __name__ == '__main__':
+    argcomplete.autocomplete(parser)
 
-if pres.verbose:
-    duecautils.verboseprint._verbose_print = True
 
-# if successful, a handler has been provided
-try:
-    hclass = pres.handler
-except AttributeError:
-    parser.print_usage()
-    sys.exit(-1)
+    pres = parser.parse_args(sys.argv[1:])
+    #pres = parser.parse_args(testargs)
 
-# run the handler
-handler = hclass()
-handler(pres)
+    if pres.verbose:
+        duecautils.verboseprint._verbose_print = True
+
+    # if successful, a handler has been provided
+    try:
+        hclass = pres.handler
+    except AttributeError:
+        parser.print_usage()
+        sys.exit(-1)
+
+    # run the handler
+    handler = hclass()
+    handler(pres)
