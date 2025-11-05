@@ -60,18 +60,19 @@ def projectSplit(url: str):
 
 
 # helper class for selecting main or master in git repos
-class MainOrMaster(str):
+class MainOrMaster:
 
-    def __init__(self, repo=None):
+    def __init__(self, repo=None, _prjname=''):
 
         if repo is not None:
             if hasattr(repo.refs, "main"):
                 self.mm = "main"
                 if hasattr(repo.refs, "master"):
                     print(
-                        "Warning, repository has both main and master branches, choosing main",
+                        f"Warning, repository {_prjname} has both main and master branches, choosing master",
                         file=sys.stderr,
                     )
+                    self.mm = "master"  # remove this for other default
             elif hasattr(repo.refs, 'master'):
                 self.mm = 'master'
             else:
@@ -625,8 +626,8 @@ class Modules:
             version = branch
         else:
             # for all others, listen to the version in the modules.xml file
-            version = (prj.version != "HEAD" and prj.version) or \
-                str(MainOrMaster(rrepo.remotes.origin))
+            mm = MainOrMaster(rrepo.remotes.origin, str(prj.name))
+            version = (prj.version != "HEAD" and prj.version) or str(mm)
             if version != branch:
                 print(
                     f"Borrowed code from {prj.name} was on branch:{branch}"
