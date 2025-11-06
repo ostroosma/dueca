@@ -336,6 +336,9 @@ public:
       call this when running. */
   void clearTriggers();
 
+  /** Is this target connected? */
+  bool hasTriggers() const { return pullers.size() > 0U; }
+
  private:
   /** Remove triggering, normally when a puller is destructed */
   void forgetTrigger(const TriggerPuller* p);
