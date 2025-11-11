@@ -11,7 +11,6 @@
         license         : EUPL-1.2
 */
 
-
 #define HardwareModule_cxx
 
 #include "HardwareModule.hxx"
@@ -32,27 +31,22 @@
 #include <WrapSendEvent.hxx>
 DUECA_NS_START;
 
-HardwareModule::HardwareModule(Entity* e,
-                               const char* m_class,
-                               const char* part,
-                               const IncoTable* inco_table,
-                               int state_size) :
+HardwareModule::HardwareModule(Entity *e, const char *m_class, const char *part,
+                               const IncoTable *inco_table, int state_size) :
   DusimeModule(e, m_class, part, inco_table, state_size),
   current_state(SimulationState::Inactive),
   last_check(0),
   future_states(10, m_class),
 
   // a token for reading commands from the entity
-  t_entity_commands(getId(),
-                    NameSet("dusime", getclassname<EntityCommand>(), ""),
-                    getclassname<EntityCommand>(), 0,
-                    Channel::Events, Channel::OnlyOneEntry),
+  t_entity_commands(
+    getId(), NameSet("dusime", getclassname<EntityCommand>(), ""),
+    getclassname<EntityCommand>(), 0, Channel::Events, Channel::OnlyOneEntry),
 
   // a write token, for sending confirmation
   t_entity_confirm(getId(),
                    NameSet("dusime", getclassname<EntityConfirm>(), ""),
-                   getclassname<EntityConfirm>(),
-                   getNameSet().name,
+                   getclassname<EntityConfirm>(), getNameSet().name,
                    Channel::Events, Channel::OneOrMoreEntries),
 
   // a callback to my module that processes the data on the entity channel
@@ -65,17 +59,15 @@ HardwareModule::HardwareModule(Entity* e,
   // specify that the activity should take place upon data reception
   // from the entity
   respond_to_entity.setTrigger(t_entity_commands);
-  respond_to_entity.switchOn(TimeSpec(0,0));
+  respond_to_entity.switchOn(TimeSpec(0, 0));
 }
-
 
 HardwareModule::~HardwareModule()
 {
   //
 }
 
-
-SimulationState::Type HardwareModule::getAndCheckState(const TimeSpec& ts)
+SimulationState::Type HardwareModule::getAndCheckState(const TimeSpec &ts)
 {
   // check whether the time increases monotonically
   if (last_check >= ts.getValidityStart()) {
@@ -87,8 +79,7 @@ SimulationState::Type HardwareModule::getAndCheckState(const TimeSpec& ts)
        activities. Make one activity the main activity that interacts
        with getAndCheckState, and use getCurrentState from the other
        activities. */
-    W_MOD(getId() << "time disorder; from " << last_check
-          << " to " << ts);
+    W_MOD(getId() << "time disorder; from " << last_check << " to " << ts);
   }
   last_check = ts.getValidityStart();
 
@@ -101,7 +92,7 @@ SimulationState::Type HardwareModule::getAndCheckState(const TimeSpec& ts)
 
     // check consistency between the future state and the current state
     bool consistent = true;
-    switch(trystate.get()) {
+    switch (trystate.get()) {
     case SimulationState::Inactive_HoldCurrent:
       consistent = (current_state == SimulationState::Inactive);
       break;
@@ -127,8 +118,8 @@ SimulationState::Type HardwareModule::getAndCheckState(const TimeSpec& ts)
          consistent with the state logic. Indicates a programming
          error in the DUSIME state logic control, or a communication
          failure. */
-      W_MOD("HardwareModule state change from " << current_state <<
-            " to " << trystate << " not acceptable");
+      W_MOD("HardwareModule state change from "
+            << current_state << " to " << trystate << " not acceptable");
     }
     else {
       current_state = trystate;
@@ -146,8 +137,6 @@ SimulationState::Type HardwareModule::getAndCheckState(const TimeSpec& ts)
        invoked too infrequently. */
     W_MOD(getId() << " state jumps too fast");
   }
-
-
 
   // was a snapshot done in the previous cycle, if so, unsnap
   if (snap_state == SnapshotState::SnapNow) {
@@ -186,57 +175,62 @@ void HardwareModule::setSafetyStop()
 
   // SimulationState actions
   current_state = SimulationState::Inactive;
-  while (future_states.notEmpty()) future_states.pop();
-
+  while (future_states.notEmpty())
+    future_states.pop();
 }
 
-void HardwareModule::processEntityCommands(const TimeSpec& ts)
+void HardwareModule::processEntityCommands(const TimeSpec &ts)
 {
-  t_entity_commands.isValid();
-  DataReader<EntityCommand> r(t_entity_commands);
+  if (!t_entity_commands.isValid())
+    return;
 
-  switch(r.data().command) {
+  while (t_entity_commands.haveVisibleSets()) {
+    DataReader<EntityCommand> r(t_entity_commands);
 
-  case EntityCommand::NewState:
-    future_states.push_back
-      (StateChange<SimulationState>(r.timeSpec().getValidityStart(),
-                                    r.data().new_state));
-    break;
+    switch (r.data().command) {
 
-  case EntityCommand::SendSnapshot:
-  case EntityCommand::SendIncoSnapshot:
-    localSendSnapshot
-      (ts, r.data().command == EntityCommand::SendIncoSnapshot);
-    break;
+    case EntityCommand::NewState:
+      future_states.push_back(StateChange<SimulationState>(
+        r.timeSpec().getValidityStart(), r.data().new_state));
+      break;
 
-  case EntityCommand::PrepareSnapshot:
-    if (r.timeSpec().getValidityStart() < last_check) {
+    case EntityCommand::SendSnapshot:
+    case EntityCommand::SendIncoSnapshot:
+      localSendSnapshot(ts,
+                        r.data().command == EntityCommand::SendIncoSnapshot);
+      break;
+
+    case EntityCommand::PrepareSnapshot:
+      if (r.timeSpec().getValidityStart() < last_check) {
       /* DUSIME system.
 
-         The snapshot preparation command arrived too late. If this
-         happens regularly, increase the lead time for entity
-         commands, see the Environment configuration options.
-      */
-      W_MOD(getId() << " at time " << last_check
-            << " too late for snapshot at " << r.timeSpec().getValidityStart());
-    }
-    future_snap_time = r.timeSpec().getValidityStart();
-    break;
+           The snapshot preparation command arrived too late. If this
+           happens regularly, increase the lead time for entity
+           commands, see the Environment configuration options.
+        */
+        W_MOD(getId() << " at time " << last_check
+                      << " too late for snapshot at "
+                      << r.timeSpec().getValidityStart());
+      }
+      future_snap_time = r.timeSpec().getValidityStart();
+      break;
 
-  case  EntityCommand::ConfirmState:
-    if (t_entity_confirm.isValid()) {
-      wrapSendData(t_entity_confirm,
-                   new EntityConfirm(current_state, snap_state,
-                                     last_check, getId()), SimTime::now());
-    }
-    break;
+    case EntityCommand::ConfirmState:
+      if (t_entity_confirm.isValid()) {
+        wrapSendData(
+          t_entity_confirm,
+          new EntityConfirm(current_state, snap_state, last_check, getId()),
+          SimTime::now());
+      }
+      break;
 
-  default:
+    default:
     /* DUSIME system.
 
-       Unknown command. This should not happen, may be due to data
-       corruption or DUECA/DUSIME internal programming error. */
-    W_MOD(getId() << "unknown EntityCommand" << r.data());
+         Unknown command. This should not happen, may be due to data
+         corruption or DUECA/DUSIME internal programming error. */
+      W_MOD(getId() << "unknown EntityCommand" << r.data());
+    }
   }
 }
 DUECA_NS_END;
