@@ -7,40 +7,65 @@
 
 (Type double)
 (Type string16 "#include <dueca/stringoptions.h>")
-(Type vector6double "
+
+(IterableType vector6double
+              "
+#include <dueca/fixvector.hxx>
+typedef dueca::fixvector<6,double> vector6double;")
+
+(IterableType vector6doubleopt
+              "
 #include <dueca/fixvector_withdefault.hxx>
-typedef dueca::fixvector_withdefault<6,double,-1> vector6double;")
-(Type vector3double "
-#include <dueca/fixvector_withdefault.hxx>
-typedef dueca::fixvector_withdefault<3,double,-1> vector3double;")
-(Type matrix44double "
+typedef dueca::fixvector_withdefault<6,double,-1> vector6doubleopt;")
+
+(IterableType vector3double
+              "
+#include <dueca/fixvector.hxx>
+typedef dueca::fixvector<3,double> vector3double;")
+
+(IterableType matrix44double
+              "
 #include <dueca/fixvector_withdefault.hxx>
 #include <dueca/fixvector.hxx>
 typedef dueca::fixvector_withdefault<16,double,-1> matrix44double;
-typedef dueca::fixvector<4,dueca::fixvector_withdefault<4,double,-1>>
+typedef dueca::fixvector_withdefault<4,dueca::fixvector<4,double>,-1>
         matrix44double2;")
 
-;; Head pose data
+;; Head Pose Data
+;;
+;; The head pose data are transmitted over zmq + msgpack
+;; Depending on the measurement set-up and measurements, head pose is
+;; available (camera_pose_matrix as 4x4, and values for the other
+;; members), or not available.
+;;
+;; When not available, camera_poses can be nan, camera_intrinsics and
+;; camera_pose_matrix are sent as nil. To code this in the C++/DCO structure,
+;; and be able to log in hdf5 format, camera_pose_matrix is coded as a 16
+;; element matrix with -1 as default. Over msgpack it is sent as nil
+;; (resulting in the default value), or as 4x4 nested array, which is
+;; the reason for some trickery in PupilRemoteHeadPoseExtra.hxx, that
+;; codes/decodes all msgpack options as 4x4 nested array, while the
+;; underlying data is a 16 element fixvector_withdefault.
 (Object PupilRemoteHeadPose
         (Option hdf5)
         (Option msgpack)
-	(IncludeFile PupilRemoteHeadPoseExtra)
+        (IncludeFile PupilRemoteHeadPoseExtra)
 
         ;; reported topic
-	(string16 topic)
+        (string16 topic)
 
-	;; ?? (can be None)
-	(vector6double camera_extrinsics (Default 0.0))
+        ;; camera pose (can be all nan)
+        (vector6double camera_poses)
 
-	;; camera pose (can be all nan)
-	(vector6double camera_poses (Default 0.0))
+        ;; ?? (can be None)
+        (vector6doubleopt camera_extrinsics)
 
-	;; camera trace? (can be 3 nan)
-	(vector3double camera_trace (Default 0.0))
+        ;; camera trace? (can be 3 nan)
+        (vector3double camera_trace)
 
-	;; camera pose matrix (can be None or 4x4)
-	(matrix44double camera_pose_matrix (Default 0.0))
+        ;; camera pose matrix (can be None or 4x4)
+        (matrix44double camera_pose_matrix)
 
-	;; lastly the timestamp
-	(double timestamp)
-	)
+        ;; lastly the timestamp
+        (double timestamp)
+        )

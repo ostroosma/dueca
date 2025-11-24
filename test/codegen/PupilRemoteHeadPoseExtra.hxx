@@ -76,7 +76,7 @@ struct UnpackVisitor<msgpack_container_dco,PupilRemoteHeadPose>:
   UnpackVisitor<typename msgpack_visitor<vector6double>::variant,vector6double>
     v_camera_poses;
   /** Unpackvisitor for member "camera_extrinsics" */
-  UnpackVisitor<typename msgpack_visitor<vector6double>::variant,vector6double>
+  UnpackVisitor<typename msgpack_visitor<vector6doubleopt>::variant,vector6doubleopt>
     v_camera_extrinsics;
   /** Unpackvisitor for member "camera_trace" */
   UnpackVisitor<typename msgpack_visitor<vector3double>::variant,vector3double>

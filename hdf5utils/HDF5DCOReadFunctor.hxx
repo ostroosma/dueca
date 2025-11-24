@@ -35,49 +35,49 @@ USING_DUECA_NS;
     vectors of data. From a base path, each element gets a dataset
     with its name.
 */
-class HDF5DCOReadFunctor: public DCOFunctor
+class HDF5DCOReadFunctor : public DCOFunctor
 {
   /** Pointer to the file */
   std::weak_ptr<H5::H5File> file;
 
 protected:
-
   /** Index in the chunk sets */
-  size_t                      readidx;
+  size_t readidx;
 
   /** Flag to indicate an advance in data reading */
-  bool                        advance;
+  bool advance;
 
   /** Number of rows available */
-  size_t                      nrows;
+  size_t nrows;
 
   /** read ticks too (only for leaf child, not for parent objects) */
-  bool                        readticks;
+  bool readticks;
 
 protected:
   /** Organize data per element */
-  struct LogDataSet {
+  struct LogDataSet
+  {
 
     /** Offset location */
-    hsize_t                   offset_dims[2];
+    hsize_t offset_dims[2];
 
     /** Single row dimension */
-    hsize_t                   row_dims[2];
+    hsize_t row_dims[2];
 
     /** Handle to the data in the file */
-    H5::DataSet               dset;
+    H5::DataSet dset;
 
     /** In-memory dataspace indices */
-    H5::DataSpace             memspace;
+    H5::DataSpace memspace;
 
     /** In-file dataspace indices */
-    H5::DataSpace             filspace;
+    H5::DataSpace filspace;
 
     /** Datatype */
-    const H5::DataType       *datatype;
+    const H5::DataType *datatype;
 
     /** Offset in the DCO object */
-    unsigned                  offset;
+    unsigned offset;
 
     /** Default constructor. */
     LogDataSet();
@@ -86,37 +86,78 @@ protected:
     void prepareRow(unsigned readidx);
 
     /** With string */
-    void readObjectPart(void* data, const std::string& dum);
+    void readObjectPart(void *data, const std::string &dum);
 
     /** With fixed size vector of strings */
     template <size_t N>
-    void readObjectPart(void* data,
-                        const dueca::fixvector<N,std::string>& dum)
+    void readObjectPart(void *data, const dueca::fixvector<N, std::string> &dum)
     {
-      union {char* ptr; dueca::fixvector<N,std::string>* val;} conv;
-      conv.ptr = reinterpret_cast<char*>(data)+offset;
+      union {
+        char *ptr;
+        dueca::fixvector<N, std::string> *val;
+      } conv;
+      conv.ptr = reinterpret_cast<char *>(data) + offset;
       hsize_t ddims[2] = { 1, 1 };
       H5::DataSpace dataspace(H5S_SCALAR);
-      for (hsize_t ii = N; ii--; ) {
+      for (hsize_t ii = N; ii--;) {
         offset_dims[1] = ii;
         filspace.selectHyperslab(H5S_SELECT_SET, ddims, offset_dims);
         dset.read((*conv.val)[ii], *datatype, memspace, filspace);
       }
     }
 
-    /** With iterable and c++ strings */
-    template<typename Alloc, template <typename, typename> class V >
-    void readObjectPart(void* data, V<std::string, Alloc>& dum)
+    /** With maps and the like, reads and inserts pairs */
+    template <typename Alloc, typename K, typename T, typename Compare,
+              template <typename, typename, typename, typename> class V>
+    void readObjectPart(void *data, V<K, T, Compare, Alloc> &dum)
     {
-      union { char* ptr; V<std::string,Alloc>* val;} conv;
-      conv.ptr = reinterpret_cast<char*>(data)+offset;
+      if (datatype == NULL)
+        return;
+      union {
+        char *ptr;
+        V<K, T, Compare, Alloc> *val;
+      } conv;
+      conv.ptr = reinterpret_cast<char *>(data) + offset;
+      try {
+        H5::Exception::dontPrint();
+        filspace.selectHyperslab(H5S_SELECT_SET, row_dims, offset_dims);
+        struct
+        {
+          size_t len;
+          std::pair<K, T> *object;
+        } tmpdata;
+
+        conv.val->clear();
+        dset.read(&tmpdata, *datatype, memspace, filspace);
+        for (unsigned ii = 0; ii < tmpdata.len; ii++) {
+          conv.val->insert(tmpdata.object[ii]);
+        }
+        H5::DataSet::vlenReclaim(&tmpdata, *datatype, memspace);
+      }
+      catch (const H5::Exception &e) {
+        std::cerr << "Trying to variable no of objects "
+                  << ", got " << e.getDetailMsg() << std::endl;
+        throw(e);
+      }
+    }
+
+    /** With iterable and c++ strings */
+    template <typename Alloc, template <typename, typename> class V>
+    void readObjectPart(void *data, V<std::string, Alloc> &dum)
+    {
+      union {
+        char *ptr;
+        V<std::string, Alloc> *val;
+      } conv;
+      conv.ptr = reinterpret_cast<char *>(data) + offset;
 
       try {
         H5::Exception::dontPrint();
         filspace.selectHyperslab(H5S_SELECT_SET, row_dims, offset_dims);
-        struct {
+        struct
+        {
           size_t len;
-          char** str;
+          char **str;
         } tmpdata;
 
         conv.val->clear();
@@ -126,7 +167,7 @@ protected:
         }
         H5::DataSet::vlenReclaim(&tmpdata, *datatype, memspace);
       }
-      catch(const H5::Exception& e) {
+      catch (const H5::Exception &e) {
         std::cerr << "Trying to variable no of strings "
                   << ", got " << e.getDetailMsg() << std::endl;
         throw(e);
@@ -134,18 +175,23 @@ protected:
     }
 
     /** With iterable and anything but strings, requires a copy */
-    template<typename Alloc, typename D, template <typename,typename> class V>
-    void readObjectPart(void* data, V<D,Alloc>& dum)
+    template <typename Alloc, typename D, template <typename, typename> class V>
+    void readObjectPart(void *data, V<D, Alloc> &dum)
     {
-      if (datatype == NULL) return;
-      union { char* ptr; V<D,Alloc>* val;} conv;
-      conv.ptr = reinterpret_cast<char*>(data)+offset;
+      if (datatype == NULL)
+        return;
+      union {
+        char *ptr;
+        V<D, Alloc> *val;
+      } conv;
+      conv.ptr = reinterpret_cast<char *>(data) + offset;
       try {
         H5::Exception::dontPrint();
         filspace.selectHyperslab(H5S_SELECT_SET, row_dims, offset_dims);
-        struct {
+        struct
+        {
           size_t len;
-          D* object;
+          D *object;
         } tmpdata;
 
         conv.val->clear();
@@ -155,7 +201,7 @@ protected:
         }
         H5::DataSet::vlenReclaim(&tmpdata, *datatype, memspace);
       }
-      catch(const H5::Exception& e) {
+      catch (const H5::Exception &e) {
         std::cerr << "Trying to variable no of objects "
                   << ", got " << e.getDetailMsg() << std::endl;
         throw(e);
@@ -163,16 +209,14 @@ protected:
     }
 
   public:
-
     /** all others, direct type */
-    template <typename T>
-    void readObjectPart(void* data, const T& dum)
+    template <typename T> void readObjectPart(void *data, const T &dum)
     {
       this->readObjectPart(data);
     }
 
     /** reading back-end */
-    void readObjectPart(void* data);
+    void readObjectPart(void *data);
   };
 
   /** One set per element/member of the DCO object. If applicable, the
@@ -181,31 +225,28 @@ protected:
 
   /** Base path for writing the data; under this a set of 1 + 2d
       vectors will be defined. */
-  std::string             basepath;
+  std::string basepath;
 
 protected:
-
   /** Configure a dataset */
-  void configureDataSet(unsigned idx,
-                        const std::string& name, hsize_t offset,
-                        const H5::DataType* datatype, hsize_t ncols);
-public:
+  void configureDataSet(unsigned idx, const std::string &name, hsize_t offset,
+                        const H5::DataType *datatype, hsize_t ncols);
 
+public:
   /** Local function to flush/write and prepare for next present data
 
       @param nextrow    If true; and advance the index, so
                         that a next getTick will read new data.
       @returns          Time associated with the current data row
    */
-  TimeTickType getTick(bool nextrow=false);
+  TimeTickType getTick(bool nextrow = false);
 
   /** Constructor */
-  HDF5DCOReadFunctor(std::weak_ptr<H5::H5File>& file,
-                     const std::string& path,
+  HDF5DCOReadFunctor(std::weak_ptr<H5::H5File> &file, const std::string &path,
                      size_t nelts, bool readticks);
 
   /** obtain the label attached to the data */
-  const std::string& getLabel();
+  const std::string &getLabel();
 
   /** Destructor */
   virtual ~HDF5DCOReadFunctor();

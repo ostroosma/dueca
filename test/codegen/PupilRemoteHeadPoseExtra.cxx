@@ -2,8 +2,8 @@
 #define __CUSTOM_COMPATLEVEL_111
 
 #if defined(DUECA_CONFIG_HDF5)
-#define __CUSTOM_COMPATLEVEL_HDF_1
 
+#define __CUSTOM_COMPATLEVEL_HDF_1
 
 // guarded in a separate namespace
 namespace PupilRemoteHeadPose_space {
@@ -167,4 +167,3 @@ GobbleVisitor& v_gobble_PupilRemoteHeadPose()
 }
 } // namespace messagepack
 } // namespace dueca
-
