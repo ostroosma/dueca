@@ -8,23 +8,19 @@
 (Type double)
 (Type string16 "#include <dueca/stringoptions.h>")
 
-(IterableType vector6double
-              "
-#include <dueca/fixvector.hxx>
-typedef dueca::fixvector<6,double> vector6double;")
+(Type vector6double "
+#include <dueca/fixvector_withdefault.hxx>
+typedef dueca::fixvector_withdefault<6,double,-1> vector6double;")
 
-(IterableType vector6doubleopt
-              "
+(Type vector6doubleopt "
 #include <dueca/fixvector_withdefault.hxx>
 typedef dueca::fixvector_withdefault<6,double,-1> vector6doubleopt;")
 
-(IterableType vector3double
-              "
+(Type vector3double "
 #include <dueca/fixvector.hxx>
 typedef dueca::fixvector<3,double> vector3double;")
 
-(IterableType matrix44double
-              "
+(Type matrix44double "
 #include <dueca/fixvector_withdefault.hxx>
 #include <dueca/fixvector.hxx>
 typedef dueca::fixvector_withdefault<16,double,-1> matrix44double;
