@@ -141,6 +141,7 @@ struct GladeCallbackTable
 /** A GUI window directly from a glade interface file. Supply the
     interface file name, and a table of pointers to callback
     functions. As an example:
+
     @code{.cxx}
     class MyGui
     {
@@ -197,6 +198,20 @@ struct GladeCallbackTable
     value by specifying it in the last column of the
     GladeCallbackTable. This will help you re-use the same callback
     for different purposes.
+
+    If you want to link a callback function to multiple widgets, you
+    can use a regular expression to get the widget names, by indicating
+    you will use a regex:
+
+    @code{.cxx}
+    static GladeCallbackTable table[] =
+    {
+      // links the button, with signal pressed, to ButtonPress
+      { "regex:button[0-9]+", "pressed", gtk_callback(&MyGui::anyPress),
+        an_optional_gpointer_variable },
+      { NULL }
+    };
+    @endcode
 
     It is also possible to quickly link and load DCO objects to
     elements in your interface. Take the following dco object as an
@@ -291,13 +306,14 @@ struct GladeCallbackTable
     Some of the possible mappings between DCO members types and gtk4 widgets
   are:
 
-    | Data type      | Widgets                                            |
-    | -------------- | ---------------------------------------------------|
-    | float, double  | GtkAdjustment, GtkRange, GtkSpinButton, GtkEntry,
-  GtkDropDown | | int, long, short | as for float | | unsigned int, long, short
-  | as for float                            | | std::string    | GtkDropDown,
-  GtkEntry, GtkFileChooser              | | bool           | GtkToggleButton |
-    | enum           | GtkDropDown, GtkCheckButton (in radio group)       |
+  | Data type      | Widgets                                            |
+  | -------------- | ---------------------------------------------------|
+  | float, double  | GtkAdjustment, GtkRange, GtkSpinButton, GtkEntry, GtkDropDown |
+  | int, long, short | as for float                                     |
+  | unsigned int, long, short  | as for float                           |
+  | std::string    | GtkDropDown,  GtkEntry, GtkFileChooser             |
+  | bool           | GtkToggleButton                                    |
+  | enum           | GtkDropDown, GtkCheckButton (in radio group)       |
 
   To set a choice for an enum value with GtkCheckButtons in a radio group, give
   the buttons the proper names (suffixed with "-enumvalue").

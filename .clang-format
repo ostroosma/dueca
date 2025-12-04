@@ -35,3 +35,6 @@ SpaceBeforeCtorInitializerColon: true
 BreakInheritanceList: AfterColon
 
 ContinuationIndentWidth: 2
+
+# do not alter/reflow comment lines
+ReflowComments: false

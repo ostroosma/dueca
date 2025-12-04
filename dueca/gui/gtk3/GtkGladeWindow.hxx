@@ -278,7 +278,7 @@ struct GladeCallbackTable
     | unsigned int, long, short | as for float                            |
     | std::string    | GtkComboBox, GtkEntry, GtkFileChooser              |
     | bool           | GtkToggleButton                                    |
-    | enum           | GtkDropDown, GtkRadioButton       |
+    | enum           | GtkDropDown, GtkRadioButton                        |
 
   To set a choice for an enum value with GtkRadioButtons, give
   the buttons the proper names (suffixed with "-enumvalue").
@@ -286,7 +286,7 @@ struct GladeCallbackTable
   These setting and getting actions that you can do with DCO objects, are
   also available for simple variables (float, double, integer types,
   std::string), through the setValue and getValue calls.
- */
+*/
 class GtkGladeWindow
 {
   /** A flag that avoids multiple initialization of glade. */
