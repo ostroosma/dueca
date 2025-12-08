@@ -29,6 +29,9 @@
 #include <boost/format.hpp>
 #include <regex>
 
+#define DEBPRINTLEVEL -1
+#include <debprint.h>
+
 DUECA_NS_START
 
 bool GtkGladeWindow::initialised_glade = false;
@@ -138,10 +141,17 @@ struct AllWidgets
   GObject *operator()()
   {
     if (list) {
-      while (current->data) {
-        if (GTK_IS_WIDGET(current->data) && gtk_widget_get_name(GTK_WIDGET(current->data)) &&
-            std::regex_match(gtk_widget_get_name(GTK_WIDGET(current->data)),
-                             matcher)) {
+      while (current) {
+        DEB("Testing "
+            << (GTK_IS_BUILDABLE(current->data) &&
+                    gtk_buildable_get_name(GTK_BUILDABLE(current->data))
+                  ? gtk_buildable_get_name(GTK_BUILDABLE(current->data))
+                  : "anon"));
+        if (GTK_IS_BUILDABLE(current->data) &&
+            gtk_buildable_get_name(GTK_BUILDABLE(current->data)) &&
+            std::regex_match(
+              gtk_buildable_get_name(GTK_BUILDABLE(current->data)), matcher)) {
+          DEB("Match");
           GObject *res = G_OBJECT(current->data);
           current = current->next;
           return res;

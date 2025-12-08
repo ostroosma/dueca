@@ -142,11 +142,12 @@ struct AllWidgets
   GObject *operator()()
   {
     if (list) {
-      while (current->data) {
-        if (GTK_IS_WIDGET(current->data) &&
-            gtk_widget_get_name(GTK_WIDGET(current->data)) &&
-            std::regex_match(gtk_widget_get_name(GTK_WIDGET(current->data)),
-                             matcher)) {
+      while (current) {
+        if (GTK_IS_BUILDABLE(current->data) &&
+            gtk_buildable_get_buildable_id(GTK_BUILDABLE(current->data)) &&
+            std::regex_match(
+              gtk_buildable_get_buildable_id(GTK_BUILDABLE(current->data)),
+              matcher)) {
           GObject *res = G_OBJECT(current->data);
           current = current->next;
           return res;
