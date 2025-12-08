@@ -982,12 +982,14 @@ bool GtkGladeWindow::_fillOptions(const char *wname, ElementWriter &writer,
   }
 
   GtkTreeModel *treemodel = gtk_combo_box_get_model(GTK_COMBO_BOX(o));
-  if (treemodel == NULL) {
+  if (treemodel == NULL ||
+      gtk_tree_model_get_n_columns(treemodel) < ((mapping != NULL) ? 2 : 1)) {
     treemodel = GTK_TREE_MODEL(
       mapping != NULL ? gtk_list_store_new(2, G_TYPE_STRING, G_TYPE_STRING)
                       : gtk_list_store_new(1, G_TYPE_STRING));
     gtk_combo_box_set_model(GTK_COMBO_BOX(o), treemodel);
   }
+  gtk_combo_box_set_id_column(GTK_COMBO_BOX(o), (mapping != NULL) ? 1 : 0);
 
   GtkListStore *store = GTK_LIST_STORE(treemodel);
   if (store == NULL) {
