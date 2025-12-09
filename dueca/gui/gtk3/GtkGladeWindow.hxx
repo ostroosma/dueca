@@ -695,6 +695,8 @@ bool GtkGladeWindow::loadComboText(const char *name, const T &values)
     gtk_list_store_append(store, &it);
     gtk_list_store_set(store, &it, 0, s.c_str(), -1);
   }
+  gtk_combo_box_set_id_column(GTK_COMBO_BOX(o), 0);
+
   return true;
 }
 
