@@ -351,6 +351,7 @@ bool GtkGladeWindow::_setValue(const char *wname, const char *value, bool warn)
 
   if (GTK_IS_COMBO_BOX(o)) {
 
+#if 0
     // find the model, and determine where the value is (should be there!)
     GtkTreeModel *mdl = gtk_combo_box_get_model(GTK_COMBO_BOX(o));
     GtkTreeIter it;
@@ -368,7 +369,6 @@ bool GtkGladeWindow::_setValue(const char *wname, const char *value, bool warn)
       gtk_combo_box_set_active_iter(GTK_COMBO_BOX(o), &it);
       return true;
     }
-
     // no valid match found
     gtk_combo_box_set_active_iter(GTK_COMBO_BOX(o), NULL);
     if (warn) {
@@ -381,6 +381,14 @@ bool GtkGladeWindow::_setValue(const char *wname, const char *value, bool warn)
       W_XTR("GtkGladeWindow::setValue: No matching item for gtk combo \""
             << wname << "\", missing \"" << value << '"');
     }
+#else
+    if (gtk_combo_box_set_active_id(GTK_COMBO_BOX(o), value) == TRUE) {
+      return true;
+    }
+    gtk_combo_box_set_active_id(GTK_COMBO_BOX(o), NULL);
+    W_XTR("GtkGladeWindow::setValue: No matching item for gtk combo \""
+          << wname << "\", missing \"" << value << '"');
+#endif
     return false;
   }
 
@@ -567,12 +575,18 @@ bool GtkGladeWindow::__getValue<std::string>(const char *wname, boost::any &b,
   }
 
   if (GTK_IS_COMBO_BOX(o)) {
+#if 0
     GtkTreeIter it;
     if (gtk_combo_box_get_active_iter(GTK_COMBO_BOX(o), &it)) {
       GtkTreeModel *treemodel = gtk_combo_box_get_model(GTK_COMBO_BOX(o));
       gchararray val;
       gtk_tree_model_get(treemodel, &it, 0, &val, -1);
       b = std::string(val);
+#else
+    const char *val = gtk_combo_box_get_active_id(GTK_COMBO_BOX(o));
+    if (val) {
+      b = std::string(val);
+#endif
     }
     else {
       if (warn) {
@@ -1016,7 +1030,7 @@ bool GtkGladeWindow::_fillOptions(const char *wname, ElementWriter &writer,
       const char *repr = _searchInMap(mapping, value.c_str(), warn);
       if (repr) {
         gtk_list_store_append(store, &it);
-        gtk_list_store_set(store, &it, 0, value.c_str(), 1, repr, -1);
+        gtk_list_store_set(store, &it, 1, value.c_str(), 0, repr, -1);
       }
     }
     else {
