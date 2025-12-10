@@ -26,8 +26,8 @@ MOVEFILES=""
 # files you want copied/archived with the run results, e.g. config file
 COPYFILES="dueca_mod.py"
 
-# create the run script. Adapt if needed for your use case
-if [ \! -x runscript -a ${RUNSCRIPT} = "1" ]; then
+# create a run script. Adapt if needed for your use case
+if [ \! -x runscript ]; then
     cat >runscript <<EOF
 #!/usr/bin/bash
 #
