@@ -9,16 +9,10 @@ DATADIR=$(realpath ../../run-data)
 # ln -sf $DATADIR/*.cnf .
 
 # create a folder for run log history
-if [ ! -d runlogs ]; then
-   mkdir runlogs
-fi
+test -d runlogs || mkdir runlogs
 
-# convenience link to executable (cmake or legacy)
-if [ -d ../../../build ]; then
-   ln -sf ../../../build/dueca_run.x .
-else
-   ln -sf ../../../dueca_run.x .
-fi
+# convenience link to executable
+test -d ../../../build && ln -sf ../../../build/dueca_run.x .
 
 # --- create a runscript ---
 # list files you want kept with the run results, e.g. logs
@@ -39,7 +33,7 @@ if [ \! -x runscript ]; then
 dueca-archivelogfiles "$MOVEFILES" "$COPYFILES"
 
 # start DUECA executable.
-./dueca_run.x  > >(tee normal.log) 2> >(tee error.log >&2)
+../../../build/dueca_run.x  > >(tee normal.log) 2> >(tee error.log >&2)
 EOF
     chmod +x runscript
 fi
@@ -47,3 +41,6 @@ fi
 # active only on node 0, when a start file is found, link the start
 # file to a start script folder (default ${HOME}/scripts)
 dueca-startlink --scriptdir=${HOME}/scripts
+
+# add your instructions, configuration/data folders, symbolic links
+# to needed files, etc.
