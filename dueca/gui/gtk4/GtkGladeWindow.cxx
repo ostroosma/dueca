@@ -862,6 +862,21 @@ bool GtkGladeWindow::__getValue<std::string>(const char *wname, boost::any &b,
   return false;
 }
 
+// explicit, maybe needed for Ubuntu 22.04
+template
+bool GtkGladeWindow::__getValue<uint32_t>(const char* name, boost::any &value, bool warn);
+template
+bool GtkGladeWindow::__getValue<uint64_t>(const char* name, boost::any &value, bool warn);
+template
+bool GtkGladeWindow::__getValue<int32_t>(const char* name, boost::any &value, bool warn);
+template
+bool GtkGladeWindow::__getValue<int64_t>(const char* name, boost::any &value, bool warn);
+template
+bool GtkGladeWindow::__getValue<float>(const char* name, boost::any &value, bool warn);
+template
+bool GtkGladeWindow::__getValue<double>(const char* name, boost::any &value, bool warn);
+
+
 bool GtkGladeWindow::_getValue(const char *wname, const CommObjectWriter &cor,
                                unsigned im, boost::any &value, bool warn)
 {
