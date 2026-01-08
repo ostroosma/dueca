@@ -2,7 +2,7 @@
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
-## [4.2.5] -
+## [4.2.5] - 2026-01-08
 
 - Corrections to the WebSocketServer write functionality
 - Enable immediate start for the WebSocketServer
@@ -17,6 +17,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 - Enable direct use of DCO objects with gtk window set/getValues
 - Fixes for DCO objects with vectors of enums
 - Documentation on configuring wayland kiosk mode
+- Detection of Wayland running from the /etc/dueca/profile script
+- Allow regex in gtk glade window for connecting multiple widgets to the same callback
+- Clean-up default links.script
 
 ## [4.2.4] - 2025-08-20
 
