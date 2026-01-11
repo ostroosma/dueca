@@ -72,6 +72,12 @@ function trimversion()
         sed -e 's/libgtk-4-dev,//
                 s/libgtkmm-4.0-dev,//
                 s/debian\.tar/debian-Debian_11.tar/' $1 > $2
+    elif [ "$3" = '13' ]; then
+        sed -e 's/libglade2-dev,//
+                s/libgtkglext1-dev,//
+                s/libgtkmm-2.4-dev,//
+                s/libmsgpack-dev,//libmsgpack-dev, libmsgpack-cxx-dev,/
+                s/debian\.tar/debian-Debian_13.tar/' $1 > $2
     elif [ "$3" = 'R10' ]; then
         sed -e 's/libgtk-4-dev,//
                 s/libgtkmm-4.0-dev,//
@@ -80,6 +86,15 @@ function trimversion()
         sed -e 's/libgtk-4-dev,//
                 s/libgtkmm-4.0-dev,//
                 s/debian\.tar/debian-Raspbian_11.tar/' $1 > $2
+    fi
+}
+
+function trimversionrules()
+{
+    if [ "$3" = '13' ]; then
+        # gtk2 and gtkmm are removed from support
+        sed -e 's/-DBUILD_GTK2=ON/-DBUILD_GTK2=OFF/
+                s/-DBUILD_GTKMM=ON/-DBUILD_GTKMM=OFF/' $1 > $2
     fi
 }
 
@@ -197,12 +212,14 @@ function create_debfiles()
         popd
     done
 
-    # Debian 11
-    for VER in 11; do
+    # Debian 11 and 13
+    for VER in 11 13; do
 
         # base version debian folder
         pushd obs
         trimversion debian/control.bak debian/control ${VER}
+        cp debian/rules debian/rules.bak
+        trimversionrules debian/rules.bak debian/rules ${VER}
         tar cvf ../../debian-Debian_${VER}.tar debian
         popd
         pushd build/obs
@@ -287,7 +304,7 @@ function create_debfiles()
             mv -f debian-xUbuntu_${VER}.tar \
                ${OSCDIR}/debian-xUbuntu_${VER}.tar
         done
-        for VER in 11; do
+        for VER in 11 13; do
             mv -f dueca-Debian_${VER}.dsc ${OSCDIR}
             mv -f debian-Debian_${VER}.tar \
                ${OSCDIR}/debian-Debian_${VER}.tar
