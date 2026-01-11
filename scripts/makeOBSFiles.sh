@@ -76,7 +76,7 @@ function trimversion()
         sed -e 's/libglade2-dev,//
                 s/libgtkglext1-dev,//
                 s/libgtkmm-2.4-dev,//
-                s/libmsgpack-dev,//libmsgpack-dev, libmsgpack-cxx-dev,/
+                s/libmsgpack-dev,/libmsgpack-dev, libmsgpack-cxx-dev,/
                 s/debian\.tar/debian-Debian_13.tar/' $1 > $2
     elif [ "$3" = 'R10' ]; then
         sed -e 's/libgtk-4-dev,//
@@ -165,6 +165,7 @@ function create_debfiles()
 
     # control will later be modified for different build versions
     mv debian/control debian/control.bak
+    cp debian/rules debian/rules.bak
     popd
 
     # to build/obs; dueca-versioned and dsc/spec files are here
@@ -218,7 +219,6 @@ function create_debfiles()
         # base version debian folder
         pushd obs
         trimversion debian/control.bak debian/control ${VER}
-        cp debian/rules debian/rules.bak
         trimversionrules debian/rules.bak debian/rules ${VER}
         tar cvf ../../debian-Debian_${VER}.tar debian
         popd
