@@ -244,8 +244,10 @@ class Click:
 
         if self.pressed:
             the_mouse.press(self.button)
+            print("Mouse pressed")
         else:
             the_mouse.release(self.button)
+            print("Mouse released")
 
 
 class KeyPress:
