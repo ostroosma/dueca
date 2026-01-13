@@ -6,7 +6,7 @@
     <window>DUECA/DUSIME control panel</window>
     <window>Are you serious?</window>
   </project>
-  <repository>git@gitlab.tudelft.nl:rvanpaassen/</repository>
+  <repository>https://github.com/dueca/</repository>
   <buildoptions>-DUSE_GTK3=ON</buildoptions>
   <execute>
     <platform>udpws-four</platform>
