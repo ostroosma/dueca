@@ -61,10 +61,10 @@ const char* GenericPacker::getTypeName()
   return "GenericPacker";
 }
 
-void GenericPacker::stopPacking()
+void GenericPacker::stopPacking(TimeTickType tick)
 {
   if (accessor != NULL) {
-    accessor->prepareToStop();
+    accessor->prepareToStop(tick);
     accessor = NULL;
   }
 }

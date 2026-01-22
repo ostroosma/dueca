@@ -72,7 +72,7 @@ public:
   virtual ~FillPacker();
 
   /** Stop packing, used at destruction time. */
-  void stopPacking() { };
+  void stopPacking(TimeTickType tick) { };
 
   /** re-fill the empty space in a message. */
   //int stuffMessage(char* store, int size);

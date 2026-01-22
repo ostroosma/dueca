@@ -139,9 +139,9 @@ void ReflectiveFillPacker::initialise(const ReflectiveStoreInformation& i)
   send_stuff.switchOn(TimeSpec(0,0));
 }
 
-void ReflectiveFillPacker::stopPacking()
+void ReflectiveFillPacker::stopPacking(TimeTickType tick)
 {
-  send_stuff.switchOff(TimeSpec(0, 0));
+  send_stuff.switchOff(tick);
 }
 
 bool ReflectiveFillPacker::packOneSet(AmorphStore& s, const PackUnit& c)

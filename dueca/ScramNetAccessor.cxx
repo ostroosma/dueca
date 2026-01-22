@@ -445,19 +445,19 @@ bool ScramNetAccessor::checkInterrupt()
 }
 
 
-void ScramNetAccessor::prepareToStop()
+void ScramNetAccessor::prepareToStop(TimeTickType tick)
 {
   W_SHM(getId() << " transferring to stop work");
 
   stopping = true;
 
   // switch off the blocking mode
-  block.switchOff(TimeSpec(0,0));
+  block.switchOff(tick);
   //block.removeTrigger();
 
   // turn off clock writing
   if (my_index == 0) {
-    clockwrite.switchOff(TimeSpec(0,0));
+    clockwrite.switchOff(tick);
   }
 
   // and go over to another activity, stopwork
@@ -640,4 +640,3 @@ void ScramNetAccessor::write(volatile uint32_t* address, uint32_t value)
 
 
 DUECA_NS_END
-

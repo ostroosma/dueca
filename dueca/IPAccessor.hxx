@@ -311,16 +311,8 @@ public:
   ObjectType getObjectType() const {return O_CommAccessor;};
 
   /** Stop the activity, at end of program. */
-  void prepareToStop();
+  void prepareToStop(TimeTickType tick);
 };
 
 DUECA_NS_END
 #endif
-
-
-
-
-
-
-
-

@@ -538,13 +538,13 @@ void DuecaNetMaster::swapLogs(TimeTickType current_tick)
   log_capacity[0] = new NetCapacityLog(ObjectManager::single()->getLocation());
 }
 
-void DuecaNetMaster::prepareToStop()
+void DuecaNetMaster::prepareToStop(TimeTickType tick)
 {
   /* DUECA network.
 
      Information on planned stop of the communication. */
-  I_NET(getId() << " stopping communication");
-  net_io.switchOff(TimeSpec(keep_tick + 5*time_spec.getValiditySpan()));
+  I_NET("DuecaNetMaster stopping communication");
+  net_io.switchOff(tick);
   NetCommunicatorMaster::breakCommunication();
 }
 

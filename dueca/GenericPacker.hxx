@@ -103,7 +103,7 @@ public:
   virtual int changeCurrentStore(int & store);
 
   /** Stop packing, used at destruction time. */
-  virtual void stopPacking();
+  virtual void stopPacking(TimeTickType tick);
 
   /** Return the object classification. */
   ObjectType getObjectType () const {return O_Dueca;}
@@ -111,8 +111,3 @@ public:
 
 DUECA_NS_END
 #endif
-
-
-
-
-

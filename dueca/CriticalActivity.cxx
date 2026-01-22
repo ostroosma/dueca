@@ -19,6 +19,7 @@
 #include <Module.hxx>
 #include <PackerManager.hxx>
 #include <dueca-conf.h>
+#include <SimTime.hxx>
 #define W_ACT
 #define E_ACT
 #define E_SYS
@@ -301,7 +302,7 @@ bool CriticalActivity::criticalErrorNodeWide()
     node_safe = false;
 
     // stop the packers, stop sending data to other nodes
-    PackerManager::single()->stopPackers();
+    PackerManager::single()->stopPackers(SimTime::now());
 
     /* DUECA activity.
 

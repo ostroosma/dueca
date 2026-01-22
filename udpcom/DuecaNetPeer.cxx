@@ -199,15 +199,15 @@ void DuecaNetPeer::runIO(const TimeSpec& ts)
   }
 }
 
-void DuecaNetPeer::prepareToStop()
+void DuecaNetPeer::prepareToStop(TimeTickType tick)
 {
   /* DUECA network.
 
      Information that this peer is ending cyclic communication.
   */
-  I_NET(getId() << " stopping communication");
+  I_NET("DuecaNetPeer stopping communication");
   commanded_stop = true;
-  setStopTime(SimTime::getTimeTick());
+  setStopTime(tick);
 }
 
 void DuecaNetPeer::clientSendConfig()

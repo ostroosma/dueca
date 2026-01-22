@@ -141,7 +141,7 @@ public:
   void start(ReflectiveAccessor* acc);
 
   /** Stop packing, used at destruction time. */
-  void stopPacking();
+  void stopPacking(TimeTickType tick);
 
   /** Pack the notification */
   void packWorkR(const TimeSpec& ts);

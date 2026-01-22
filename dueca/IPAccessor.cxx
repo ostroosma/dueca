@@ -402,7 +402,7 @@ void IPAccessor::despatch1toN(const TimeSpec& ts)
             E_NET(getId() << " cannot accomodate packet size " <<
                   bytes << ", check dueca.cnf");
             CriticalActivity::criticalErrorNodeWide();
-            prepareToStop();
+            prepareToStop(ts.getValidityStart());
             returnBuffer(buf);
             return;
           }
@@ -587,7 +587,7 @@ void IPAccessor::despatch1toN(const TimeSpec& ts)
           E_NET(getId() << " cannot accomodate packet size " <<
                 bytes << ", check dueca.cnf");
           CriticalActivity::criticalErrorNodeWide();
-          prepareToStop();
+          prepareToStop(ts.getValidityStart());
           returnBuffer(buf);
           return;
         }
@@ -738,7 +738,7 @@ void IPAccessor::despatch0(const TimeSpec& ts)
         E_NET(getId() << " cannot accomodate packet size " <<
               bytes << ", check dueca.cnf");
         CriticalActivity::criticalErrorNodeWide();
-        prepareToStop();
+        prepareToStop(ts.getValidityStart());
         returnBuffer(buf);
         return;
       }
@@ -1075,7 +1075,7 @@ bool IPAccessor::spinToLast(int sockno, char* buffer)
       E_NET(getId() << " cannot accomodate packet size " <<
             bytes << ", check dueca.cnf");
       CriticalActivity::criticalErrorNodeWide();
-      prepareToStop();
+      prepareToStop(0U);
       return false;
     }
     /* DUECA network.
@@ -1209,14 +1209,14 @@ bool IPAccessor::getDuecaData(const TimeSpec& time, MessageBuffer* buffer)
   return true;
 }
 
-void IPAccessor::prepareToStop()
+void IPAccessor::prepareToStop(TimeTickType tick)
 {
   /* DUECA network.
 
      Planned stop of communication. */
   I_NET(getId() << " stopping communication");
 
-  net_io.switchOff(TimeSpec(0,0));
+  net_io.switchOff(tick);
 
   running = false;
 }

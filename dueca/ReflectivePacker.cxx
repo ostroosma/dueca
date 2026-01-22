@@ -182,12 +182,12 @@ void ReflectivePacker::start(ReflectiveAccessor* acc)
   this->pull(0);
 }
 
-void ReflectivePacker::stopPacking()
+void ReflectivePacker::stopPacking(TimeTickType tick)
 {
   if (accessor != NULL) {
 
     // tell my accessor
-    accessor->prepareToStop();
+    accessor->prepareToStop(tick);
 
     // and tell myself
     accessor = NULL;
@@ -400,4 +400,3 @@ int ReflectivePacker::changeCurrentStore(int& store_no)
 }
 
 DUECA_NS_END
-
