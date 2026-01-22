@@ -2,7 +2,7 @@
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
-## [4.2.5] - 2026-01-08
+## [4.2.5] - 2026-01-22
 
 - Corrections to the WebSocketServer write functionality
 - Enable immediate start for the WebSocketServer
@@ -20,6 +20,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 - Detection of Wayland running from the /etc/dueca/profile script
 - Allow regex in gtk glade window for connecting multiple widgets to the same callback
 - Clean-up default links.script
+- Handle boost >= 1.89
+- Fix debian 13 build
+- More explicit output on the test runner
+- Fix the /etc/dueca/profile script, autodetection of environment on
+  Wayland/Weston, Xwayland or conventional Xorg
+- Make udp/websocket communication closing more robust to message timeouts
 
 ## [4.2.4] - 2025-08-20
 
