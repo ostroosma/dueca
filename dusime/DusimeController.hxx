@@ -32,132 +32,135 @@
 
 DUECA_NS_START
 
-/** This is a definition of a singleton object that controls the
+/** This is the base class for singleton object that controls the
     Dusime modules (HardwareModule, SimulationModule) in a
     dueca/dusime system. This controller accepts signals from the
     interface (button presses etc.) and communicates with the
-    different modules. */
+    different modules.
+
+    Normal state changes are initiated through an interface. However, this
+    object also listens on a channel "SimStateRequest://dusime", with 
+    events to control the simulation state. 
+  */
 class DusimeController : public Module
 {
 protected:
   /** State of the simulation, as commanded to the model. */
-  SimulationState                        commanded_state;
+  SimulationState commanded_state;
 
   /** Confirmed state from the simulation. */
-  SimulationState                        confirmed_state;
+  SimulationState confirmed_state;
 
   /** Confirmed state from the simulation. */
-  SimulationState                        previous_confirmed_state;
+  SimulationState previous_confirmed_state;
 
   /** Transition state commanded after pressing a button. */
-  SimulationState                        new_state;
+  SimulationState new_state;
 
   /** Flag that indicates that a state change has been commanded. */
-  bool                                   state_has_changed;
+  bool state_has_changed;
 
   /** Flag that is set when replay is possible. */
-  bool                                   replay_ready;
+  bool replay_ready;
 
   /** Flag to remember the calibration pass. */
-  bool                                   calibrated;
+  bool calibrated;
 
   /** Flag to remember start. */
-  bool                                   waiting_for_emanager;
+  bool waiting_for_emanager;
 
   /** Flag to remember dirt in the state. */
-  bool                                   state_dirty;
+  bool state_dirty;
 
   /** Earliest time at which a new mode change request can be made. */
-  TimeTickType                           earliest_change;
+  TimeTickType earliest_change;
 
   /** Minimum interval of mode change requests. */
-  TimeTickType                           min_interval;
+  TimeTickType min_interval;
 
   /** Minimum advance notification required for a change request. */
-  TimeTickType                           min_notification;
+  TimeTickType min_notification;
 
   /** Block programmatic transition to advance */
-  bool                                   block_advance;
+  bool block_advance;
 
   /** Flag / hack to run without gui, for gui-derived classes */
-  bool                                   use_gui;
+  bool use_gui;
 
 private:
   /** Counter to keep down the no of confirm messages, when all states
       are aligned. */
-  int                                    confirm_divisor;
+  int confirm_divisor;
 
   /** Channel to write the entity commands. */
-  ChannelWriteToken                      t_entity_commands;
+  ChannelWriteToken t_entity_commands;
 
   /** Channel over which confirmation is received. */
-  ChannelReadToken                       t_entity_confirm;
+  ChannelReadToken t_entity_confirm;
 
   /** Channel over which -- possibly -- the application can send state
       change requests. */
-  ChannelReadToken                       t_state_request;
+  ChannelReadToken t_state_request;
 
   /** Channel with confirmation of mode changes. */
-  ChannelWriteToken                      t_confirmed_state;
+  ChannelWriteToken t_confirmed_state;
 
   /** Callback object 1. */
-  Callback<DusimeController>             cb1;
+  Callback<DusimeController> cb1;
 
   /** Callback object 2. */
-  Callback<DusimeController>             cb2;
+  Callback<DusimeController> cb2;
 
   /** Callback object 3. */
-  Callback<DusimeController>             cb3;
+  Callback<DusimeController> cb3;
 
   /** Callback object 4. */
-  Callback<DusimeController>             cb4;
-
+  Callback<DusimeController> cb4;
 
   /** Activity, reading the confirmations. */
-  ActivityCallback                       read_confirms;
+  ActivityCallback read_confirms;
 
   /** Activity, sending queries. */
-  ActivityCallback                       send_queries;
+  ActivityCallback send_queries;
 
   /** Activity, responding to application state change requests */
-  ActivityCallback                       respond_app;
+  ActivityCallback respond_app;
 
   /** Activity, send a snapshot send request. */
-  ActivityCallback                       collect_snap;
+  ActivityCallback collect_snap;
 
   /** Clock for a-periodic stuff. */
-  AperiodicAlarm                         waker;
+  AperiodicAlarm waker;
 
   /** This class is a singleton. */
-  static DusimeController*               singleton;
+  static DusimeController *singleton;
 
 public:
   /** Constructor, called from scheme as a standard module. */
-  DusimeController(Entity* e, const char* part,
-                   const PrioritySpec& ps);
+  DusimeController(Entity *e, const char *part, const PrioritySpec &ps);
 
   /** Destructor. */
   ~DusimeController();
 
   /** Table with tuneable parameters. */
-  static const ParameterTable* getParameterTable();
+  static const ParameterTable *getParameterTable();
 
   /** Adjust minimum interval */
-  bool setMinInterval(const int& i);
+  bool setMinInterval(const int &i);
 
   /** name of the class, as known to scheme. */
-  static const char* const               classname;
+  static const char *const classname;
 
   /** Get a pointer to the singleton. */
-  static inline DusimeController* single() { return singleton; }
+  static inline DusimeController *single() { return singleton; }
 
   /** Standard startmodule command; this is after all a normal
       module. */
-  void startModule(const TimeSpec& time);
+  void startModule(const TimeSpec &time);
 
   /** Standard stopmodule command; this is after all a normal
       module. */
-  void stopModule(const TimeSpec& time);
+  void stopModule(const TimeSpec &time);
 
   /** Tell that I am prepared to run. */
   bool isPrepared();
@@ -166,7 +169,7 @@ public:
       \param req_state    The target state for the simulation.
       \returns            True if the state change can be initialised,
                           false if not possible. */
-  bool controlModel(const SimulationState& req_state,
+  bool controlModel(const SimulationState &req_state,
                     TimeTickType req_time = SimTime::getTimeTick());
 
   /** Determine whether the model is frozen, and initial condition etc.
@@ -185,23 +188,23 @@ protected:
 
 private:
   /** Handle confirmation messages. */
-  void processConfirm(const TimeSpec& time);
+  void processConfirm(const TimeSpec &time);
 
   /** Send out queries. */
-  void sendQuery(const TimeSpec& time);
+  void sendQuery(const TimeSpec &time);
 
   /** Change the state on request of the application. */
-  void applicationStateChange(const TimeSpec& time);
+  void applicationStateChange(const TimeSpec &time);
 
   /** Follow up on a snapshot take request. */
-  void snapCollect(const TimeSpec& time);
+  void snapCollect(const TimeSpec &time);
 
 protected:
   /** Have any GUIs refresh their view of the entities in DUECA */
   virtual void refreshEntitiesView();
 
   /** Have any GUI, refresh button state */
-  virtual void refreshButtonState(const SimulationState& btn_state);
+  virtual void refreshButtonState(const SimulationState &btn_state);
 };
 
 DUECA_NS_END

@@ -31,7 +31,7 @@ It is implemented as:
  * There is also [Documentation](https://dueca.tudelft.nl/doc/), which
    can be generated from the `doc` folder.
 
- * Some example code.
+ * Some example code; a [test project](https://github.com/dueca/DuecaTestCommunication), which is used in CI testing, and an [example project](https://github.com/dueca/SimpleSimulation), which shows you how to set up a simulation, and is also used in CI testing.
 
 ## What is in here?
 
@@ -40,7 +40,7 @@ It is implemented as:
   graphical interfaces.
 
 - The `extra` folder contains a hodge-podge of helper stuff that may
-  be useful in implementing simulations.
+  be useful in implementing simulations; integration routines, helper classes for IO conversions and implementing calibration and the like.
 
 - `dusime` contains the code supporting simulations.
 
@@ -49,12 +49,11 @@ It is implemented as:
 - The folder `udpcom` contains the code that links DUECA executables
   over a network.
 
-- The folder `inter` can connect multiple DUECA processes, similar to
-  HLA or DIS.
+- The folder `inter` can (loosely or tightly) connect multiple DUECA processes, similar to how HLA or DIS work. You choose which channels need to be replicated across the DUECA simulations, and optionally whether timing should be synchronized.
 
 - The code generator for communicatable objects is in `pycodegen`.
 
-- With the `websock` addition DUECA can offer websocket communication.
+- With the `websock` addition DUECA can offer websocket communication, typically for connecting DUECA to external programs in python or running in a browser. In addition the websocket communication modules can provide a minimal web server, so you can fetch webpages and (javascript) code.
 
 - The `obs` folder contains build files for rpm-based or deb-based
   distributions. Currently building for Debian, Ubuntu, Fedora and
@@ -63,13 +62,13 @@ It is implemented as:
 - the `ddff` folder contains the code for yet another logging format,
   custom-created for efficiently saving and re-loading streaming
   data. This logging format is used by the `dusime` modules to
-  implement record and replay within simulations.
+  implement record and replay within simulations. This logger can be used stand-alone, and python code to convert the files to hdf5 or directly read the files is also available.
 
 ## Building and running
 
 DUECA can use, depending on how you configure it, a considerable
 number of third party libraries. The main interface is created in GTK,
-(versions 2 and 3 currently). The simulation set-up is scripted in
+(versions 2, 3 and 4 currently). The simulation set-up is scripted in
 either Python (currently preferred) or Guile (scheme).
 
 When you are looking to use DUECA for your simulation, rather than
@@ -86,11 +85,23 @@ Note that by itself, DUECA won't do anything, you need to create your
 own application code to make a project. You can check out and run the
 DuecaTestCommunication project, but note that that project's only use
 is as a test vehicle. The documentation also details how you can make
-a project named SimpleSimulation.
+a project named SimpleSimulation, a "simple" project that demonstrates
+joystick input, vehicle dynamcs, a first-person out of the window 3D
+view, instrumentation (a compass window with OpenGL), gtk4-based
+experiment control windows, distributing your
+simulation over multiple executables, simulation state snapshots;
+input recording, resetting a snapshot and replay, and multi-player
+connection.
 
+The [WorldView](https://github.com/dueca/WorldView) and [FlexiStick](https://github.com/dueca/FlexiStick) projects offer various visualization back-ends and interaction with joystick devices respectively. You can "borrow" modules from these project to integrate these in your own simulation projects.
+
+In the build actions leading up to new releases, the DuecaTestCommunication and
+SimpleSimulation projects are used to check DUECA's code by running
+various more-or-less real-time simulations operated by a test script. 
 After having installed DUECA (through compilation or from packages),
-you can start to use it in development of simulation projects. Please
-check the documentation for the `dueca-gproject` script. You will need
+you can start to use it in development of simulation projects. 
+
+Please check the documentation for the `dueca-gproject` script. You will need
 an "upstream" git repository for your code.
 
 ## References

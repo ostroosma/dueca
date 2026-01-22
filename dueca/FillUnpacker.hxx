@@ -27,6 +27,7 @@
 #include "varvector.hxx"
 
 DUECA_NS_START
+
 class ChannelManager;
 class PrioritySpec;
 class Accessor;

@@ -86,7 +86,7 @@ public:
 
 private:
   /** prepare to stop. */
-  void prepareToStop();
+  void prepareToStop(TimeTickType tick) final;
 
   /// method that blocks, waiting for data from the other side
   void blockForData(const TimeSpec& ts);

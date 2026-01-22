@@ -22,7 +22,8 @@ typedef uint8_t LocationId;")
 ;;
 ;; Local and remote queries for an object, defined by its name
 ;; and the entity in which it participates, are returned with a GlobalId
-(EventAndStream GlobalId
+(Object GlobalId
+        (Option msgpack)
                 (IncludeFile GlobalIdExtra)
                 ;; ID part pointing to the dueca node
                 (LocationId location (Default invalid_location_id))

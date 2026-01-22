@@ -127,8 +127,9 @@
 ;;    // done, can now send off the snapshot.
 ;;  @endcode
 
-(Event
+(Object
  Snapshot
+ (Option msgpack)
  (IncludeFile SnapshotExtra)
  ;; A place for the data, variable size. Use this with ASCII converted
  ;; data (XML, JSON), or use an AmorphStore to pack as binary data.

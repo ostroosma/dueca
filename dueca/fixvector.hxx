@@ -14,7 +14,6 @@
 */
 
 #pragma once
-#define fixvector_hxx
 #include <CommObjectTraits.hxx>
 #include <PackTraits.hxx>
 #include <dueca_ns.h>
@@ -256,6 +255,9 @@ ostream &operator<<(ostream &os, const dueca::fixvector<N, D> &v)
   return os << "}";
 }
 PRINT_NS_END;
+
+#define fixvector_hxx
+#include "msgpack.hxx"
 
 MSGPACKUS_NS_START;
 template <typename S, size_t N, typename T>

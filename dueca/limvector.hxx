@@ -14,7 +14,6 @@
 */
 
 #pragma once
-#define limvector_hxx
 #include <dueca_ns.h>
 #include <CommObjectTraits.hxx>
 #include <PackTraits.hxx>
@@ -293,6 +292,9 @@ template <size_t N, typename D>
 struct dco_nested<limvector<N, D>> : public dco_nested<D> {};
 
 DUECA_NS_END;
+
+#define limvector_hxx
+#include <msgpack.hxx>
 
 MSGPACKUS_NS_START;
 template <typename S, size_t N, typename T>

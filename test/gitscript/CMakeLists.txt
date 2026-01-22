@@ -20,7 +20,7 @@ endif()
 if(Python3_Interpreter_FOUND)
 
   set(DUECA_GPROJECT
-    ${CMAKE_SOURCE_DIR}/gitscripts/dueca-gproject.py --verbose)
+    ${CMAKE_SOURCE_DIR}/gitscripts/dueca_gproject.py --verbose)
   set(NEW_MODULE
     ${CMAKE_SOURCE_DIR}/scripts/new-module)
   set(TESTCODER

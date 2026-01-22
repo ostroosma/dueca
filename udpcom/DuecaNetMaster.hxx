@@ -134,7 +134,7 @@ private:
 
   /** valid token */
   void cbValid(const TimeSpec& ts, const std::string& name);
-  
+
 private:
 
   /** Additional peer data to add to welcome message, none in this case */
@@ -188,7 +188,7 @@ private:
 
       Implements a function of the Accessor.
   */
-  void prepareToStop() final;
+  void prepareToStop(TimeTickType tick) final;
 };
 
 DUECA_NS_END;

@@ -123,7 +123,7 @@ private:
                            int usecoffset) final;
 
   /** Stop the activity, at end of program. */
-  void prepareToStop();
+  void prepareToStop(TimeTickType tick) final;
 
 };
 

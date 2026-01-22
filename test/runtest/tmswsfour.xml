@@ -6,7 +6,7 @@
     <window>DUECA/DUSIME control panel</window>
     <window>Are you serious?</window>
   </project>
-  <repository>git@gitlab.tudelft.nl:rvanpaassen/</repository>
+  <repository>https://github.com/dueca/</repository>
   <buildoptions>-DUSE_GTK3=ON</buildoptions>
   <execute>
     <platform>udpws-four</platform>
@@ -26,7 +26,7 @@
   </execute>
   <offset x="1" y="-10" />
   <actions>
-    <check window="DUECA/DUSIME control panel" x="477" y="35" r="65" g="255" b="11" timeout="20.0"
+    <check window="DUECA/DUSIME control panel" x="477" y="35" r="65" g="255" b="11" timeout="40.0"
       wait="0.5" />
     <check window="DUECA/DUSIME control panel" x="474" y="75" r="104" g="104" b="104" timeout="10.0"
       wait="0.5" />

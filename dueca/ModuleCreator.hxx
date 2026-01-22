@@ -15,12 +15,14 @@
 #ifndef ModuleCreator_hh
 #define ModuleCreator_hh
 
-//#include <list>
+// #include <list>
 #include <SharedPtrTemplates.hxx>
 #include <stringoptions.h>
 #include <ArgElement.hxx>
 #include <dueca_ns.h>
 #include <PrioritySpec.hxx>
+#include <ScriptCreatable.hxx>
+#include <memory>
 
 DUECA_NS_START
 
@@ -43,12 +45,15 @@ class ModuleCreator INHERIT_REFCOUNT(ModuleCreator)
   INCLASS_REFCOUNT(ModuleCreator);
 
   /** Copy constructor, not implemented */
-  ModuleCreator(const ModuleCreator&);
+  ModuleCreator(const ModuleCreator &);
 
   /** assignment, not implemented */
-  ModuleCreator& operator = (const ModuleCreator&);
-protected:
+  ModuleCreator &operator=(const ModuleCreator &);
 
+  /** Reference holder for creation arguments (valid for Python) */
+  std::shared_ptr<ReferenceHolder> holder;
+
+protected:
   /// processed arguments
   ArgElement::arglist_t processed_arguments;
 
@@ -68,13 +73,13 @@ protected:
 
   /** The father of the module, the TypeCreator that can call the
       constructor. */
-  GenericTypeCreator* father;
+  GenericTypeCreator *father;
 
   /** The Entity that the module belongs to. */
-  Entity* entity;
+  Entity *entity;
 
   /** A pointer to the module itself, once it has been created. */
-  Module* object;
+  Module *object;
 
   /** The priority specification to be used. */
   PrioritySpec prio_spec;
@@ -86,8 +91,8 @@ public:
       \param father  Pointer to the type creator for this class of objects.
       \param prio_spec Priority at which this object should run.
   */
-  ModuleCreator(const std::string& part,
-                GenericTypeCreator* father, const PrioritySpec& prio_spec);
+  ModuleCreator(const std::string &part, GenericTypeCreator *father,
+                const PrioritySpec &prio_spec);
 
   /// Destructor
   ~ModuleCreator();
@@ -100,19 +105,19 @@ public:
   static void addParam(unsigned idx, boost::any value);
 
   /** Work to be done, creation of the module. */
-  Module* createModule(Entity* e);
+  Module *createModule(Entity *e);
 
   /** Completion step */
   void completeModule();
 
   /** Print module name if available */
-  const std::string& getName();
+  const std::string &getName();
 
   /** Print entity name */
   std::string getEntityName();
 
   /** Get type name */
-  const std::string& getType();
+  const std::string &getType();
 
   /** Process prepared arguments, to be called after an update of the
       module. */
@@ -122,14 +127,17 @@ public:
   inline void argumentError() { cstate = ArgumentError; }
 
   /** Get the father */
-  inline const GenericTypeCreator* getFather() { return father; }
+  inline const GenericTypeCreator *getFather() { return father; }
 
   /** Access the arguments */
-  inline ArgElement::arglist_t& processed() { return processed_arguments; }
+  inline ArgElement::arglist_t &processed() { return processed_arguments; }
+
+  /** Set the reference holder */
+  inline void setHolder(ReferenceHolder *_h) { holder.reset(_h); }
+
+  /** Retrieve the reference holder */
+  std::shared_ptr<ReferenceHolder> getHolder();
 };
-
-
-
 
 DUECA_NS_END
 #endif

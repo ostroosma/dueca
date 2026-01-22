@@ -374,7 +374,10 @@ struct WriteEntry INHERIT_REFCOUNT(WriteEntry)
   sconnection_t sconnection;
 
   /** Set the connection link */
-  template <typename C> void setConnection(C &connection);
+  void setConnection(connection_t connection);
+
+  /** Set the connection link, when secure */
+  void setConnection(sconnection_t connection);
 
   /** global id */
   const GlobalId &getId();
@@ -383,7 +386,7 @@ struct WriteEntry INHERIT_REFCOUNT(WriteEntry)
   bool checkToken();
 
   /** Indicate this is no longer connected to a socket. */
-  inline void doDisconnect() { state = UnConnected; }
+  inline void doDisconnect() { state = UnConnected; connection = NULL; sconnection = NULL; }
 
   /** From now on connected to a socket. */
   inline void doConnect() { state = Connected; }
@@ -433,7 +436,7 @@ struct WriteEntry INHERIT_REFCOUNT(WriteEntry)
   /** Close the connection */
   void close(const char *reason, int status = 1000);
 
-private:
+protected:
   /** Callback valid token */
   void tokenValid(const TimeSpec &ts);
 };
@@ -484,6 +487,7 @@ struct PresetWriteEntry : public WriteEntry
   */
   void complete(const std::string &datatype, const std::string &label,
                 bool stream, bool ctiming, bool bulk, bool diffpack);
+
 };
 
 /** Configuration of entry writing reading combination */

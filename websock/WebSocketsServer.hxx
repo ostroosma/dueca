@@ -184,11 +184,14 @@ private: // activity allocation
       generally better to trigger on the incoming channels */
   PeriodicAlarm myclock;
 
-  /** Callback object for simulation calculation. */
-  Callback<WebSocketsServerBase> cb1;
+  /** Callback objects for simulation calculation. */
+  Callback<WebSocketsServerBase> cb1, cb2;
 
   /** Activity for simulation calculation. */
   ActivityCallback do_transfer;
+
+  /** Activity for immediate start up */
+  ActivityCallback do_startup;
 
 public: // class name and trim/parameter tables
   /** Return the parameter table. */
@@ -201,6 +204,9 @@ public: // construction and further specification
 
   /** Helper function, templated with the server type */
   template <typename S> bool _complete_http(S &server);
+
+  /** Complete the setup, needed for immediate start */
+  virtual bool complete() override;
 
   /** Destructor. */
   virtual ~WebSocketsServerBase();
@@ -253,6 +259,9 @@ public: // member functions for cooperation with DUECA
 public: // the member functions that are called for activities
   /** the method that implements the main calculation. */
   void doTransfer(const TimeSpec &ts);
+
+  /** Start-up activities, for when immediate start is requested */
+  void doStart(const TimeSpec &ts);
 
 public: // coding function
   /** sending marker, binary or string */
@@ -388,7 +397,8 @@ public: // coding function
 
     Optionally a /write/name entry can have been created as preset. In
     that case, the write token is created at startup of the server,
-    and writing will be immediately available. The write token and
+    and writing will be immediately available. The first message sent
+    may then be an empty struct. The write token and
     channel entry will also persist after a connection is lost, and
     then a new connection can assume the write entry and continue.
     </td>

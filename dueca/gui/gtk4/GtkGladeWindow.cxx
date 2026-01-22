@@ -35,6 +35,7 @@
 #include "debug.h"
 #include <boost/lexical_cast.hpp>
 #include <boost/format.hpp>
+#include <regex>
 
 #define DEBPRINTLEVEL -1
 #include <debprint.h>
@@ -100,6 +101,71 @@ static void GtkGladeWindow_placeWindow(GtkWidget *win, gpointer _self)
   reinterpret_cast<GtkGladeWindow *>(_self)->placeWindow(win, NULL);
 }
 
+namespace {
+
+struct AllWidgets
+{
+  // list of found widgets
+  GSList *list;
+
+  // current iterating widget
+  GSList *current;
+
+  // object
+  GObject *object;
+
+  // regexp object
+  std::regex matcher;
+
+  AllWidgets(GtkBuilder *builder, const char *name) :
+    list(nullptr),
+    current(nullptr),
+    matcher()
+  {
+    if (!strncmp(name, "regex:", 6)) {
+      matcher = std::regex(&name[6]);
+      list = gtk_builder_get_objects(builder);
+      current = list;
+    }
+    else {
+      object = gtk_builder_get_object(builder, name);
+    }
+  }
+
+  ~AllWidgets()
+  {
+    if (list) {
+      g_slist_free(list);
+    }
+  }
+
+  GObject *operator()()
+  {
+    if (list) {
+      while (current) {
+        if (GTK_IS_BUILDABLE(current->data) &&
+            gtk_buildable_get_buildable_id(GTK_BUILDABLE(current->data)) &&
+            std::regex_match(
+              gtk_buildable_get_buildable_id(GTK_BUILDABLE(current->data)),
+              matcher)) {
+          GObject *res = G_OBJECT(current->data);
+          current = current->next;
+          return res;
+        }
+        current = current->next;
+      }
+      return nullptr;
+    }
+
+    // no list return non-null only once
+    GObject *res = object;
+    object = nullptr;
+    return res;
+  }
+};
+
+} // namespace
+
 bool GtkGladeWindow::readGladeFile(const char *file, const char *mainwidget,
                                    gpointer client,
                                    const GladeCallbackTable *table,
@@ -163,12 +229,16 @@ void GtkGladeWindow::connectCallbacks(gpointer client,
   while (cbl->widget) {
 
     // lookup the widget and link the function
-    GObject *b = gtk_builder_get_object(builder, cbl->widget);
+    AllWidgets wdgts(builder, cbl->widget);
+    GObject *b = wdgts();
     if (b) {
-      GtkCaller *caller = cbl->func->clone(client);
-      caller->setGPointer(cbl->user_data);
-      // link the callback function
-      g_signal_connect(b, cbl->signal, caller->callback(), caller);
+      while (b) {
+        GtkCaller *caller = cbl->func->clone(client);
+        caller->setGPointer(cbl->user_data);
+        // link the callback function
+        g_signal_connect(b, cbl->signal, caller->callback(), caller);
+        b = wdgts();
+      }
     }
 
     else if (warn) {
@@ -194,12 +264,17 @@ void GtkGladeWindow::connectCallbacksAfter(gpointer client,
   while (cbl->widget) {
 
     // lookup the widget and link the function
-    GObject *b = gtk_builder_get_object(builder, cbl->widget);
+    // lookup the widget and link the function
+    AllWidgets wdgts(builder, cbl->widget);
+    GObject *b = wdgts();
     if (b) {
-      GtkCaller *caller = cbl->func->clone(client);
-      caller->setGPointer(cbl->user_data);
-      // link the callback function
-      g_signal_connect_after(b, cbl->signal, caller->callback(), caller);
+      while (b) {
+        GtkCaller *caller = cbl->func->clone(client);
+        caller->setGPointer(cbl->user_data);
+        // link the callback function
+        g_signal_connect_after(b, cbl->signal, caller->callback(), caller);
+        b = wdgts();
+      }
     }
 
     else if (warn) {
@@ -787,6 +862,21 @@ bool GtkGladeWindow::__getValue<std::string>(const char *wname, boost::any &b,
   return false;
 }
 
+// explicit, maybe needed for Ubuntu 22.04
+template
+bool GtkGladeWindow::__getValue<uint32_t>(const char* name, boost::any &value, bool warn);
+template
+bool GtkGladeWindow::__getValue<uint64_t>(const char* name, boost::any &value, bool warn);
+template
+bool GtkGladeWindow::__getValue<int32_t>(const char* name, boost::any &value, bool warn);
+template
+bool GtkGladeWindow::__getValue<int64_t>(const char* name, boost::any &value, bool warn);
+template
+bool GtkGladeWindow::__getValue<float>(const char* name, boost::any &value, bool warn);
+template
+bool GtkGladeWindow::__getValue<double>(const char* name, boost::any &value, bool warn);
+
+
 bool GtkGladeWindow::_getValue(const char *wname, const CommObjectWriter &cor,
                                unsigned im, boost::any &value, bool warn)
 {
@@ -848,8 +938,19 @@ bool GtkGladeWindow::_getValue(const char *wname, const CommObjectWriter &cor,
   return false;
 }
 
-unsigned GtkGladeWindow::setValues(CommObjectReader &dco, const char *format,
-                                   const char *arrformat, bool warn)
+template <>
+unsigned GtkGladeWindow::setValues<DCOReader>(DCOReader &dco,
+                                              const char *format,
+                                              const char *arrformat, bool warn)
+{
+  return setValues<CommObjectReader>(dco, format, arrformat, warn);
+}
+
+template <>
+unsigned GtkGladeWindow::setValues<CommObjectReader>(CommObjectReader &dco,
+                                                     const char *format,
+                                                     const char *arrformat,
+                                                     bool warn)
 {
   unsigned nset = 0;
   char gtkid[128];
@@ -979,8 +1080,19 @@ bool GtkGladeWindow::_setRadiosFromEnum(const char *gtkid,
   return false;
 }
 
-unsigned GtkGladeWindow::getValues(CommObjectWriter &dco, const char *format,
-                                   const char *arrformat, bool warn)
+template <>
+unsigned GtkGladeWindow::getValues<DCOWriter>(DCOWriter &dco,
+                                              const char *format,
+                                              const char *arrformat, bool warn)
+{
+  return getValues<CommObjectWriter>(dco, format, arrformat, warn);
+}
+
+template <>
+unsigned GtkGladeWindow::getValues<CommObjectWriter>(CommObjectWriter &dco,
+                                                     const char *format,
+                                                     const char *arrformat,
+                                                     bool warn)
 {
   unsigned nset = 0;
   char gtkid[128];

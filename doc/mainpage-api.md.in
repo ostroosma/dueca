@@ -126,8 +126,6 @@ simulation.
 <ul>
 <li>  [How to set up your application](@ref setup)
 
-<li>  [Quick start in programming](@ref quickstart)
-
 <li>  [DUECA key concepts](@ref keyconcept)
 
 <li>  [DUSIME key concepts](@ref dusime)
@@ -146,7 +144,7 @@ simulation.
 
 <li>  [Common ways of setting up channels](@ref channelpatterns)
 
-<li>  [Including code generated from Simulink](@ref rtw)
+<li>  [Including code generated from Simulink -- old style](@ref rtw)
 
 <li>  [Including code generated from Simulink, Matlab 2015a and later](@ref coder)
 

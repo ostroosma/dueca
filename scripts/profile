@@ -4,27 +4,52 @@
 # Uncomment and adapt to override X guessing
 # DISPLAY=:1
 
-if [ -z "$DISPLAY" ]; then
+WESTONPID=$(pgrep --uid $(id --user) --newest weston)
 
-   # can we see an Xwayland?
-   $DISPLAY=`ps -C Xwayland --format=args --no-headers | tail -1 | awk -F ' +' '{print $2}'`
-   if [ -n $DISPLAY ]; then
-      echo "Guessing display as ${DISPLAY} from Xwayland"
+if [ -n "$WESTONPID" ]; then
+   XDGSET=$(tr '\0' '\n' </proc/$WESTONPID/environ | grep -E ^XDG_RUNTIME_DIR)
+   DBUSSET=$(tr '\0' '\n' </proc/$WESTONPID/environ | grep -E ^DBUS_SESSION_BUS_ADDRESS)
+   WDSET=$(tr '\0' '\n' </proc/$WESTONPID/environ | grep -E ^WESTON_DISPLAY)
+   DSET=$(tr '\0' '\n' </proc/$WESTONPID/environ | grep -E ^DISPLAY)
+
+   export $XDGSET
+   export $DBUSSET
+   export $WDSET
+   export $DSET
+
+   >&2 echo "Weston session detected"
+   >&2 echo $XDGSET
+   >&2 echo $WDSET
+   >&2 echo $DSET
+
+fi
+
+XWAYLANDPID=$(pgrep --uid $(id --user) --newest Xwayland)
+
+if [ -n "$XWAYLANDPID" -a -z "$DISPLAY" ]; then
+
+   DSET=$(tr '\0' '\n' </proc/$XWAYLANDPID/environ | grep -E ^DISPLAY)
+   export $DSET
+
+   if [ -n "$DISPLAY" ]; then
+      echo "Guessing DISPLAY as ${DISPLAY} from Xwayland"
    fi
 fi
 
-if [ -z "$DISPLAY" ]; then
+XORGPID=$(pgrep --uid $(id --user) --newest Xorg)
+if [ -n "$XORGPID" -a -z "$DISPLAY" ]; then
 
-   # can we see an Xorg seat?
-   $DISPLAY=`who | grep $USER | grep --invert-match login | tail -1 | awk -F ' +' '{print $2}'`
-   if [ -n $DISPLAY ]; then
-      echo "Guessing display as ${DISPLAY} from Xorg/who"
+   DISPLAY=$(ps -p $XORGPID -o args | tail -1 | awk '{print $NF}')
+
+   if [ -n "$DISPLAY" ]; then
+       echo "Guessing DISPLAY as ${DISPLAY} from Xorg/who"
    fi
 fi
 
 # simply guessing the default
 if [ -z "$DISPLAY" ]; then
    DISPLAY=:0.0
+   echo "Default guess for DISPLAY as ${DISPLAY}"
 fi
 
 export DISPLAY

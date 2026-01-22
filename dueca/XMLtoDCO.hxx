@@ -40,7 +40,6 @@ struct xmldecodeexception: public std::exception
   /** Return the message */
   const char* what() const noexcept;
 };
-
 class CommObjectWriter;
 
 /** Convert the data from an XML stringbuffer to a DCO object.

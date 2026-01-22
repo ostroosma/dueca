@@ -428,9 +428,9 @@ case $OPTION in
                     --gtkmm|--gtkmm2)
                         PKGS="$PKGS dueca-extra-gtkmm"
                         ;;
-                    --gtkmm3)
-                        PKGS="$PKGS dueca-extra-gtkmm3"
-                        ;;
+#                    --gtkmm3)
+#                        PKGS="$PKGS dueca-extra-gtkmm3"
+#                        ;;
                     --gtk3)
                         PKGS="$PKGS dueca-extra-gtk3"
                         EXTRAGUI="dueca-extra\${SCRIPTSUFFIX}"

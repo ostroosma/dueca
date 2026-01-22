@@ -268,7 +268,7 @@ private:
                           unsigned idx)
   { if (idx != 0) throw IndexExceeded();
     return reinterpret_cast<void*>(par::object); }
-  
+
   inline void* get_object(const dco_write_optional&,
                           unsigned idx)
   { if (idx != 0) throw IndexExceeded();
@@ -312,8 +312,8 @@ private:
   void write(const dco_isenum&, const dco_write_iterable&,
              const boost::any& val, const boost::any& key)
   { const std::string valcast = boost::any_cast<const std::string>(val);
-    const typename par::elt_value_type newval;
-    readFromString(newval, val);
+    typename par::elt_value_type newval;
+    readFromString(newval, valcast);
     par::object->push_back(newval);
   }
 
@@ -328,8 +328,8 @@ private:
              const boost::any& val, const boost::any& key)
   { if (par::ii == par::object->end()) throw IndexExceeded();
     const std::string valcast = boost::any_cast<const std::string>(val);
-    const typename par::elt_value_type newval;
-    readFromString(newval, val);
+    typename par::elt_value_type newval;
+    readFromString(newval, valcast);
     *par::ii++ = newval; }
 
   void write(const dco_isdirect&, const dco_write_fixed_it&,
@@ -344,8 +344,8 @@ private:
              const boost::any& val, unsigned idx)
   { if (idx >= par::object->size()) throw IndexExceeded();
     const std::string valcast = boost::any_cast<const std::string>(val);
-    const typename par::elt_value_type newval;
-    readFromString(newval, val);
+    typename par::elt_value_type newval;
+    readFromString(newval, valcast);
     *(par::object->ptr() + idx) = newval; }
 
   void write(const dco_isdirect&, const dco_write_fixed_it&,
@@ -407,7 +407,7 @@ private:
   { getFirst(*par::object); }
 
   void setFirstValue(const dco_isenum&, const dco_write_iterable&)
-  { const typename par::elt_value_type newval; getFirst(newval);
+  { typename par::elt_value_type newval; getFirst(newval);
     par::object->push_back(newval); }
 
   void setFirstValue(const dco_isenum&, const dco_write_fixed_it&)

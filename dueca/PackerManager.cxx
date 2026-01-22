@@ -155,13 +155,13 @@ bool PackerManager::complete()
   return true;
 }
 
-void PackerManager::stopPackers()
+void PackerManager::stopPackers(TimeTickType tick)
 {
   for (int ii = packer_set.size(); ii--; ) {
     if (ii != ObjectManager::single()->getLocation()) {
-      (packer_set[ii]->getPacker(Bulk))->stopPacking();
-      (packer_set[ii]->getPacker(Regular))->stopPacking();
-      (packer_set[ii]->getPacker(HighPriority))->stopPacking();
+      (packer_set[ii]->getPacker(Bulk))->stopPacking(tick);
+      (packer_set[ii]->getPacker(Regular))->stopPacking(tick);
+      (packer_set[ii]->getPacker(HighPriority))->stopPacking(tick);
     }
   }
   /* DUECA network.

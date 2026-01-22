@@ -1244,7 +1244,7 @@ int Environment::update()
   return in_control;
 }
 
-void Environment::quit()
+void Environment::quit(TimeTickType tick)
 {
   in_control = false;
 
@@ -1258,13 +1258,13 @@ void Environment::quit()
     the other nodes.
   */
   I_SYS("Environment: Stopping packers");
-  PackerManager::single()->stopPackers();
+  PackerManager::single()->stopPackers(tick);
 
   // flag that multithread running is over
   running_multithread = false;
 
   // do some "manual" ticks again, helps communicators to end their
-  // blocking, one second
+  // blocking, two seconds
   for (int ii = 20; ii--;) {
     usleep(100000); // 0.1 second
     Ticker::single()->checkTick();

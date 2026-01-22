@@ -11,7 +11,6 @@
         license         : EUPL-1.2
 */
 
-
 #define ModuleCreator_cc
 
 #include <dueca-conf.h>
@@ -29,12 +28,11 @@
 #include <debug.h>
 
 using namespace std;
-//#define COMPLETE_NOW
+// #define COMPLETE_NOW
 DUECA_NS_START
 
 #define DEBPRINTLEVEL -1
 #include <debprint.h>
-
 
 #ifdef ACTIV_NOCATCH
 #define EXCEPTION NeverThrown
@@ -42,15 +40,14 @@ DUECA_NS_START
 #define EXCEPTION std::exception
 #endif
 
-ModuleCreator::ModuleCreator(const std::string& part,
-                             GenericTypeCreator* father,
-                             const PrioritySpec& prio_spec) :
+ModuleCreator::ModuleCreator(const std::string &part,
+                             GenericTypeCreator *father,
+                             const PrioritySpec &prio_spec) :
   // modulecreator_refcount(0),
-  INIT_REFCOUNT_COMMA
-  part(part),
+  INIT_REFCOUNT_COMMA part(part),
   cstate(Initial),
-  //module_created(false),
-  //arguments_ok(true),
+  // module_created(false),
+  // arguments_ok(true),
   father(father),
   entity(NULL),
   object(NULL),
@@ -81,22 +78,27 @@ ModuleCreator::~ModuleCreator()
 std::string ModuleCreator::getEntityName()
 {
   static const std::string unknown("unknown-entity");
-  if (entity) return entity->getEntity();
+  if (entity)
+    return entity->getEntity();
   return unknown;
 }
 
-const std::string& ModuleCreator::getType()
-{
-  return father->getType();
-}
+const std::string &ModuleCreator::getType() { return father->getType(); }
 
-const std::string& ModuleCreator::getName()
+const std::string &ModuleCreator::getName()
 {
   static std::string notcreated = "not yet created";
   if (object) {
     return object->getNameSet().name;
   }
   return notcreated;
+}
+
+std::shared_ptr<ReferenceHolder> ModuleCreator::getHolder()
+{
+  if (object)
+    return object->getHolder();
+  return holder;
 }
 
 void ModuleCreator::completeModule()
@@ -109,8 +111,8 @@ void ModuleCreator::completeModule()
        check and fix the code if you don't find it there. Verify and
        remedy the error condition.
     */
-    E_CNF("Error in complete() method, deleting " <<
-          father->getType() << "://" << entity->getEntity() << '/' << part);
+    E_CNF("Error in complete() method, deleting "
+          << father->getType() << "://" << entity->getEntity() << '/' << part);
     delete object;
     object = NULL;
   }
@@ -122,7 +124,7 @@ void ModuleCreator::completeModule()
   }
 }
 
-Module* ModuleCreator::createModule(Entity* e)
+Module *ModuleCreator::createModule(Entity *e)
 {
   assert(cstate != Completed);
   entity = e;
@@ -138,6 +140,9 @@ Module* ModuleCreator::createModule(Entity* e)
 #else
         DuecaEnv::queueComplete(this);
 #endif
+        // pass reference for holder
+        object->setHolder(holder);
+        holder.reset();
       }
       else {
         /* DUECA scripting.
@@ -148,13 +153,13 @@ Module* ModuleCreator::createModule(Entity* e)
            case will not be further created. Check for error messages
            on the non-accepted arguments, and fix.
         */
-        E_CNF("Error in arguments processing, not creating module " <<
-              father->getType() << "://" << e->getEntity() << '/' << part);
+        E_CNF("Error in arguments processing, not creating module "
+              << father->getType() << "://" << e->getEntity() << '/' << part);
         delete object;
         object = NULL;
       }
     }
-    catch (EXCEPTION& ex) {
+    catch (EXCEPTION &ex) {
       /* DUECA scripting.
 
          While attempting to create a module, supply argument or
@@ -162,9 +167,10 @@ Module* ModuleCreator::createModule(Entity* e)
          module is not created. Check the error message and offending
          code.
       */
-      E_CNF("error creating module for " << e->getEntity() << " ;"
-            << father->getType() << "://" << e->getEntity() << '/' << part
-            << ", problem " << endl << ex.what());
+      E_CNF("error creating module for "
+            << e->getEntity() << " ;" << father->getType() << "://"
+            << e->getEntity() << '/' << part << ", problem " << endl
+            << ex.what());
       delete object;
       object = NULL;
     }
@@ -173,8 +179,8 @@ Module* ModuleCreator::createModule(Entity* e)
     /* DUECA scripting.
 
        State of the module is unexpected. */
-    E_CNF("Parameter setting failure, not creating module " <<
-          father->getType() << "://" << e->getEntity() << '/' << part);
+    E_CNF("Parameter setting failure, not creating module "
+          << father->getType() << "://" << e->getEntity() << '/' << part);
   }
 
   return object;
@@ -197,8 +203,9 @@ void ModuleCreator::injectAndCheckComplete()
            argument not accepted. This leads to a node-wide error
            condition.
         */
-        E_CNF("Error in arguments processing, starting node-wide error " <<
-              father->getType() << "://" << entity->getEntity() << '/' << part);
+        E_CNF("Error in arguments processing, starting node-wide error "
+              << father->getType() << "://" << entity->getEntity() << '/'
+              << part);
 
         // to prevent this system from running
         CriticalActivity::criticalErrorNodeWide();
@@ -213,16 +220,16 @@ void ModuleCreator::injectAndCheckComplete()
            all modules will accept re-intialisation. Inspect the error
            condition, and correct your code.
         */
-        E_CNF("re-initialisation failed in complete (" <<
-              object->getEntity() << ',' <<
-              object->getClass() << ',' << object->getPart() << ')');
+        E_CNF("re-initialisation failed in complete ("
+              << object->getEntity() << ',' << object->getClass() << ','
+              << object->getPart() << ')');
 
         // to prevent this system from running
         CriticalActivity::criticalErrorNodeWide();
       }
     }
-
-  } catch (const std::exception& ex) {
+  }
+  catch (const std::exception &ex) {
 
     /* DUECA scripting.
 
@@ -230,16 +237,14 @@ void ModuleCreator::injectAndCheckComplete()
        the complete method, an exception was thrown. A global error
        state is started. Check the error message and offending code.
      */
-    E_CNF("error module arguments (" <<
-          object->getEntity() << ',' <<
-          object->getClass() << ',' << object->getPart() << ')');
+    E_CNF("error module arguments (" << object->getEntity() << ','
+                                     << object->getClass() << ','
+                                     << object->getPart() << ')');
     // to prevent this system from running
     CriticalActivity::criticalErrorNodeWide();
 
     throw(ex);
   }
 }
-
-
 
 DUECA_NS_END

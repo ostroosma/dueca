@@ -260,6 +260,16 @@ bool WebSocketsServer<Encoder, Decoder>::_complete(S &server)
       }
       writer.EndObject();
     }
+    for (const auto &wr : presetwriters) {
+      writer.StartObject(3);
+      writer.Key("endpoint");
+      writer.String(wr.first.c_str());
+      writer.Key("dataclass");
+      writer.String(wr.second->datatype.c_str());
+      writer.Key("typeinfo");
+      codeTypeInfo(writer, wr.second->datatype);
+      writer.EndObject();
+    }
     writer.EndArray();
 
     writer.Key("write-and-read");
@@ -374,9 +384,9 @@ bool WebSocketsServer<Encoder, Decoder>::_complete(S &server)
                         const SimpleWeb::error_code &ec) {
       /* DUECA websockets.
 
-       Unexpected error in the "current" URL connection.
-    */
-    W_XTR("Error in connection " << connection.get() << ". "
+     Unexpected error in the "current" URL connection.
+  */
+    W_XTR("Error in current connection " << connection.get() << ". "
                                  << "Error: " << ec
                                  << ", error message: " << ec.message());
   };
@@ -485,7 +495,7 @@ bool WebSocketsServer<Encoder, Decoder>::_complete(S &server)
 
        Unexpected error in the "follow" URL connection.
     */
-    W_XTR("Error in connection " << connection.get() << ". "
+    W_XTR("Error in follow connection " << connection.get() << ". "
                                  << "Error: " << ec
                                  << ", error message: " << ec.message());
   };
@@ -600,7 +610,7 @@ bool WebSocketsServer<Encoder, Decoder>::_complete(S &server)
     /* DUECA websockets.
 
        Unexpected error in an "info" URL connection. */
-    W_XTR("Error in connection " << connection.get() << ". "
+    W_XTR("Error in monitor connection " << connection.get() << ". "
                                  << "Error: " << ec
                                  << ", error message: " << ec.message());
   };
@@ -667,7 +677,7 @@ bool WebSocketsServer<Encoder, Decoder>::_complete(S &server)
     /* DUECA websockets.
 
        Unexpected error in a "write" URL connection. */
-    W_XTR("Error in connection " << connection->path_match[0] << ". "
+    W_XTR("Error in writer connection " << connection->path_match[0] << ". "
                                  << "Error: " << ec
                                  << ", error message: " << ec.message());
   };
@@ -739,6 +749,11 @@ bool WebSocketsServer<Encoder, Decoder>::_complete(S &server)
             W_XTR("Could not find old connection to remove");
           }
         }
+
+        /* DUECA websockets.
+        
+           Information on a new preset writing connection. */
+        I_XTR("New preset connection " << connection->path_match[0]);
         pre->second->setConnection(connection);
         this->writers[reinterpret_cast<void *>(connection.get())] = pre->second;
         return;
@@ -796,8 +811,7 @@ bool WebSocketsServer<Encoder, Decoder>::_complete(S &server)
         // TODO decode message here, and call with arguments
         Decoder dec(in_message->string());
         std::string label;
-        if (!dec.findMember("label", label))
-          throw connectionparseerror();
+        dec.findMember("label", label);
         bool ctiming = false;
         dec.findMember("ctiming", ctiming);
         bool event = true;
@@ -807,12 +821,18 @@ bool WebSocketsServer<Encoder, Decoder>::_complete(S &server)
         bool diffpack = false;
         dec.findMember("diffpack", diffpack);
         std::string dataclass;
-        if (!dec.findMember("dataclass", dataclass))
-          throw connectionparseerror();
+        dec.findMember("dataclass", dataclass);
         // WriteEntry
         ww->second->complete(dataclass, label, !event, ctiming, bulk, diffpack);
       }
       catch (const std::exception &e) {
+        /* DUECA websockets.
+        
+           Error in decoding the first message on a writing end. Check for matching dataclass, 
+           and instructions for label, timing, etc.
+        */
+        W_XTR("Write connection on " << connection->path_match[0] << 
+              " not completed, need initial message wth configuration " << e.what());
         const std::string reason(e.what());
         connection->send_close(1007, reason);
         return;
@@ -858,7 +878,7 @@ bool WebSocketsServer<Encoder, Decoder>::_complete(S &server)
     /* DUECA websockets.
 
        Unexpected error in a "write-and-read" URL connection. */
-    W_XTR("Error in connection " << connection->path_match[0] << ". "
+    W_XTR("Error in writerreader connection " << connection->path_match[0] << ". "
                                  << "Error: " << ec
                                  << ", error message: " << ec.message());
   };
@@ -1012,6 +1032,9 @@ bool WebSocketsServer<Encoder, Decoder>::_complete(S &server)
 template <typename Encoder, typename Decoder>
 bool WebSocketsServer<Encoder, Decoder>::complete()
 {
+  // call parent complete
+  WebSocketsServerBase::complete();
+
   /* All your parameters have been set. You may do extended
      initialisation here. Return false if something is wrong. */
 

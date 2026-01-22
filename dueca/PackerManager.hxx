@@ -18,11 +18,10 @@
 #endif
 
 #include "PackerSet.hxx"
-#include "TransportClass.hxx"
 #include <vector>
 #include <dueca_ns.h>
 #include "ScriptCreatable.hxx"
-#include <dueca/visibility.h>
+
 DUECA_NS_START
 struct ParameterTable;
 
@@ -79,7 +78,7 @@ public:
 public:
   /** Get a pointer to the appropriate transport, for a class and a
       destination. */
-  static GenericPacker* LNK_WEAK findMatchingTransport(int destination,
+  static GenericPacker* findMatchingTransport(int destination,
                                                        Channel::TransportClass tclass);
 
   /** Print a description to stream. */
@@ -87,7 +86,7 @@ public:
                                PackerManager& a);
 
   /** Stop all packers. Called at destruction time. */
-  void LNK_WEAK stopPackers();
+  void stopPackers(TimeTickType tick);
 };
 
 DUECA_NS_END

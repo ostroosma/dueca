@@ -11,7 +11,6 @@
         license         : EUPL-1.2
 */
 
-
 #define Logger_cxx
 #include "Logger.hxx"
 #include "LogConcentrator.hxx"
@@ -22,17 +21,17 @@
 
 DUECA_NS_START
 
-InformationStash<LogPoint>& Logpoint_stash()
+InformationStash<LogPoint> &Logpoint_stash()
 {
   // this mem will be lost, otherwise it may be deleted while logging
   // is still continuing.
-  static InformationStash<LogPoint>* _stash = new InformationStash<LogPoint>("LogPoint");
+  static InformationStash<LogPoint> *_stash =
+    new InformationStash<LogPoint>("LogPoint");
   return *_stash;
 }
 
-Logger::Logger(const char* fname, const int lnumber,
-               const LogLevel& level, const LogCategory& cat,
-               bool initial) :
+Logger::Logger(const char *fname, const int lnumber, const LogLevel &level,
+               const LogCategory &cat, bool initial) :
   main_switch((level > LogLevel(LogLevel::Info)) || initial),
   _count(0),
   period_count(0),
@@ -49,10 +48,7 @@ Logger::Logger(const char* fname, const int lnumber,
   Logpoint_stash().stash(new LogPoint(_id, line, level, cat.getId(), fname));
 }
 
-Logger::~Logger()
-{
-  //
-}
+Logger::~Logger() { DEB("Removing logger in " << fname << ":" << line); }
 
 void Logger::transmit()
 {
@@ -60,17 +56,15 @@ void Logger::transmit()
   LogConcentrator::single().accept(this);
 }
 
-void Logger::show(std::ostream& os) const
+void Logger::show(std::ostream &os) const
 {
-  os << LogLevel_to_letter(this->level) << this->category << ' '
-     << this->fname << ':' << this->line;
+  os << LogLevel_to_letter(this->level) << this->category << ' ' << this->fname
+     << ':' << this->line;
 }
 
-void Logger::showType(std::ostream& os) const
+void Logger::showType(std::ostream &os) const
 {
   os << LogLevel_to_letter(this->level) << this->category;
 }
 
-
 DUECA_NS_END
-

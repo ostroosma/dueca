@@ -19,6 +19,8 @@
 ;; from an ActivityView object and then sent off for feedback to the
 ;; user.
 (Event ActivityLog
+
+       (Option msgpack)
        (IncludeFile ActivityLogExtra)
        (AddToHeader "#include <ActivityBit.hxx>
 DUECA_NS_START;

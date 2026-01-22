@@ -21,8 +21,10 @@
 #include "visibility.h"
 #include "dueca_ns.h"
 #include "SharedPtrTemplates.hxx"
-#include "ClockTime.hxx"
 #include "PythonCorrectedName.hxx"
+#include <memory>
+#include "ReferenceHolder.hxx"
+#include "ClockTime.hxx"
 
 DUECA_NS_START
 
@@ -31,7 +33,8 @@ DUECA_NS_START
     For compatibility with older DUECA versions (<2.3) that relied on
     setting scheme/guile references to prevent deletion by the garbage
     collector. */
-struct ObsoleteObject {
+struct ObsoleteObject
+{
   DUECA_DEPRECATED("deprecated since dueca 2.3, no longer needed")
   /** Deprecated function, used to be needed for scheme garbage collection */
   void addReferred(unsigned dum);
@@ -40,6 +43,7 @@ struct ObsoleteObject {
   unsigned getSCM();
 };
 
+struct ReferenceHolder;
 struct ParameterTable;
 class ScriptCreatable;
 
@@ -74,8 +78,7 @@ class ScriptCreatable;
     \endcode
 
     \see dueca::MemberCall2Way for accessing the objects */
-class ScriptCreatable
-INHERIT_REFCOUNT(ScriptCreatable)
+class ScriptCreatable INHERIT_REFCOUNT(ScriptCreatable)
 {
   INCLASS_REFCOUNT(ScriptCreatable);
 
@@ -96,21 +99,24 @@ public:
   SCM_FEATURES_DEF;
 
   /** This contained the per-object Scheme information, it is now obsolete */
-  mutable ObsoleteObject      scheme_id;
+  mutable ObsoleteObject scheme_id;
 
   /** For objects that don't define a parameter table, this one
       becomes default. */
-  static const ParameterTable* getParameterTable();
+  static const ParameterTable *getParameterTable();
+
+  /** Reference holder for creation arguments (valid for Python) */
+  std::shared_ptr<ReferenceHolder> holder;
 
 public:
   /** Constructor */
   ScriptCreatable();
 
   /** Copy constructor */
-  ScriptCreatable(const ScriptCreatable& o);
+  ScriptCreatable(const ScriptCreatable &o);
 
   /** Assignment */
-  ScriptCreatable& operator = (const ScriptCreatable& o);
+  ScriptCreatable &operator=(const ScriptCreatable &o);
 
   /** Indicate parameter failure */
   inline void argumentError() { cstate = ArgumentError; }
@@ -122,10 +128,16 @@ public:
   virtual ~ScriptCreatable();
 
   /** Type name information */
-  virtual const char* getTypeName();
+  virtual const char *getTypeName();
 
   /** Run the complete function */
   bool checkComplete();
+
+  /** Set the reference holder */
+  inline void setHolder(ReferenceHolder *_h) { holder.reset(_h); }
+
+  /** Retrieve the reference holder */
+  inline std::shared_ptr<ReferenceHolder> getHolder() { return holder; }
 
 protected:
   /** Dummy complete function */
@@ -133,27 +145,25 @@ protected:
 };
 
 /** Return a base name for a script accessible object */
-template<> const char* core_creator_name<ScriptCreatable>(const char*);
+template <> const char *core_creator_name<ScriptCreatable>(const char *);
 
 /** Macro to emit a warning message on an unfullfilled condition.
     \param  A   Condition, will also be repeated in the message. */
-#define SCRIPTSTART_CHECK(A)                        \
-  if (! ( A ) ) { \
-    cerr << "WARN:" << DuecaClockTime() << getId() << '/' \
-         << " condition " #A " not valid" << endl; \
-    res = false; \
+#define SCRIPTSTART_CHECK(A)                                                   \
+  if (!(A)) {                                                                  \
+    cerr << "WARN:" << DuecaClockTime() << getId() << '/'                      \
+         << " condition " #A " not valid" << endl;                             \
+    res = false;                                                               \
   }
 
 /** Macro to emit a warning message on an unfullfilled condition.
     \param  A   Condition.
     \param  B   Warning message. */
-#define SCRIPTSTART_CHECK2(A,B) \
-  if (! ( A ) ) {                                                       \
-    cerr << "WARN:" << DuecaClockTime() << getId() << '/' \
-         << B << endl; \
-    res = false; \
+#define SCRIPTSTART_CHECK2(A, B)                                               \
+  if (!(A)) {                                                                  \
+    cerr << "WARN:" << DuecaClockTime() << getId() << '/' << B << endl;        \
+    res = false;                                                               \
   }
-
 
 DUECA_NS_END
 #endif

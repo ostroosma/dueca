@@ -307,7 +307,7 @@ private:
 
 public:
   /** This method stops the time looping by the CSE. */
-  void quit();
+  void quit(TimeTickType tick);
 
 public:
   /** this method does one update sweep of the CSE. invokes all

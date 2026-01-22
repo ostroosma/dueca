@@ -160,4 +160,4 @@ void msg_unpack(S& i0, const S& iend, PupilRemoteHeadPose&i)
 
 
 // ensure the } originally closing of class definition is balanced
-namespace _dummy {
+namespace {

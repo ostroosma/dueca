@@ -18,6 +18,7 @@
 #include <dueca_ns.h>
 #include <DataClassRegistryPredef.hxx>
 #include <CommObjectExceptions.hxx>
+#include <CommObjectMemberArity.hxx>
 
 DUECA_NS_START;
 

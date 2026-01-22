@@ -54,6 +54,9 @@ class NodeManager: public NamedObject
   /** Counter to once-in-a-while force node status display */
   unsigned once_in_a_while;
 
+  /** Flag to remember break-up status */
+  bool breaking;
+
   /** Read token for the channel with node control messages. */
   ChannelReadToken                      t_control;
 
@@ -134,8 +137,7 @@ public:
   /** Return the id of the current node. */
   inline const int getThisNodeNo() const {return this_node;}
 
-  /** Command to break up communication with other DUECA nodes.
-      \todo Does not work yet, use Ctrl-c to stop the programs. */
+  /** Command to break up communication with other DUECA nodes. */
   void breakUp();
 
   /** \name Query calls.
@@ -172,4 +174,3 @@ public:
 
 DUECA_NS_END
 #endif
-

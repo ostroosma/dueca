@@ -243,8 +243,10 @@ WebSocketsServerBase::WebSocketsServerBase(Entity *e, const char *part,
   followers(),
   monitors(),
   myclock(),
-  cb1(this, &WebSocketsServerBase::doTransfer),
-  do_transfer(getId(), "run websocket IO", &cb1, ps)
+  cb1(this, &_ThisModule_::doTransfer),
+  cb2(this, &_ThisModule_::doStart),
+  do_transfer(getId(), "run websocket IO", &cb1, ps),
+  do_startup(getId(), "websocket quick", &cb2, PrioritySpec(0,0))
 {
   // connect the triggers for simulation
   do_transfer.setTrigger(myclock);
@@ -257,6 +259,17 @@ WebSocketsServerBase::WebSocketsServerBase(Entity *e, const char *part,
 #define BOOST_POSTCALL boost::asio::post
 #define BOOST_POSTARG1 *runcontext,
 #endif
+
+bool WebSocketsServerBase::complete()
+{
+  if (immediate_start) {
+    // connect and activate startup
+    do_startup.setTrigger(myclock);
+    do_startup.setTimeSpec(TimeSpec(0.0, 1.0));
+    do_startup.switchOn(SimTime::now());
+  }
+  return true;
+}
 
 // destructor
 WebSocketsServerBase::~WebSocketsServerBase()
@@ -591,7 +604,7 @@ bool WebSocketsServerBase::setPresetWriterSetup(
 
            Wrong keywords found in the setup of a writer with
            preset. Check your configuration files. */
-        E_CNF("Can only use keywords \"event\", \"stream\" or \"ctiming\"");
+        E_CNF("Can only use keywords \"event\", \"stream\", \"bulk\", \"diffpack\", or \"ctiming\"");
         return false;
       }
     }
@@ -724,14 +737,26 @@ bool WebSocketsServerBase::isPrepared()
     res = res && pw.second->checkToken();
   }
 
-  if (res && immediate_start && !auto_started) {
-    TimeSpec now(SimTime::now());
-    startModule(now);
-    auto_started = true;
-  }
-
   // return result of checks
   return res;
+}
+
+void WebSocketsServerBase::doStart(const TimeSpec& ts)
+{
+  assert(immediate_start);
+  if (auto_started) return;
+  if (isPrepared()) {
+
+    // start normal activities
+    TimeSpec now(SimTime::now());
+    startModule(now);
+
+    // stop the startup and remove the clock
+    do_startup.switchOff();
+    do_startup.clearTriggers();
+
+    auto_started = true;
+  }
 }
 
 // start the module

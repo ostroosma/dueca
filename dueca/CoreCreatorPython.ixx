@@ -17,6 +17,7 @@
 
 #include "StartIOStream.hxx"
 #include <ScriptCreatable.hxx>
+#include <ReferenceHolderPython.hxx>
 #include <ScriptCreatableDataHolder.hxx>
 #include <ScriptInterpret.hxx>
 #include <DuecaEnv.hxx>
@@ -42,68 +43,74 @@ DUECA_NS_START
 
 class ScriptDataError
 {
-  const char* msg;
+  const char *msg;
+
 public:
-  ScriptDataError(const char* msg) : msg(msg) { }
-  const char* what() { return msg; }
+  ScriptDataError(const char *msg) :
+    msg(msg)
+  {}
+  const char *what() { return msg; }
 };
 
 // https://wiki.python.org/moin/boost.python/EmbeddingPython
 // bpy::object dueca_module( (bpy::handle<>(PyImport_ImportModule("dueca"))) );
 // scope(cpp_module).attr("cpp") = ptr(&cpp);
 
-
 // am using bpy::extract<boost::intrusive_ptr<T> > here,
 // seems to work when the python object is not const ???
 
 // signature of the call
-template<typename T>
-ProbeType getProbeType(const typeflag<T>& a);
+template <typename T> ProbeType getProbeType(const typeflag<T> &a);
 
 // Sentinel, specific handling
-template<>
-ProbeType getProbeType(const typeflag<NOOP>& a);
+template <> ProbeType getProbeType(const typeflag<NOOP> &a);
 
 // packer, specific handling, not as a generic IO thing
-template<>
-ProbeType getProbeType(const typeflag<dueca::GenericPacker&>& a);
+template <> ProbeType getProbeType(const typeflag<dueca::GenericPacker &> &a);
 
 // generic, if an intrusive pointer is used
-template<typename T>
-ProbeType getProbeType(const typeflag<boost::intrusive_ptr<T> >& a)
+template <typename T>
+ProbeType getProbeType(const typeflag<boost::intrusive_ptr<T>> &a)
 {
   const typeflag<T> u;
   return GenericVarIO::getProbeType(u);
 }
 
 // generic implementation
-template<typename T>
-ProbeType getProbeType(const typeflag<T>& a)
+template <typename T> ProbeType getProbeType(const typeflag<T> &a)
 {
   return GenericVarIO::getProbeType(a);
 }
 
-template<typename P>
-struct printarg {
-  void print(std::ostream& res, bool& first, bool opt=false)
+template <typename P> struct printarg
+{
+  void print(std::ostream &res, bool &first, bool opt = false)
   {
-    if (first) {first = false;} else {res << "," << endl << "            ";}
-    if (opt) { res << "[<" << getProbeType(typeflag<P>()) << ">]";}
-    else { res << "<" << getProbeType(typeflag<P>()) << ">"; }
+    if (first) {
+      first = false;
+    }
+    else {
+      res << "," << endl << "            ";
+    }
+    if (opt) {
+      res << "[<" << getProbeType(typeflag<P>()) << ">]";
+    }
+    else {
+      res << "<" << getProbeType(typeflag<P>()) << ">";
+    }
   }
 };
 
-template<>
-struct printarg<NOOP> {
-  void print(std::ostream& res, bool& first, bool opt=false)
-  { return; }
+template <> struct printarg<NOOP>
+{
+  void print(std::ostream &res, bool &first, bool opt = false) { return; }
 };
 
-template<typename P1, typename P2, typename P3, typename P4, typename P5,
-         typename P6, typename P7, typename P8, typename P9, typename P10>
-struct printarg<bpy::optional<P1, P2, P3, P4, P5, P6, P7, P8, P9, P10> >
+template <typename P1, typename P2, typename P3, typename P4, typename P5,
+          typename P6, typename P7, typename P8, typename P9, typename P10>
+struct printarg<bpy::optional<P1, P2, P3, P4, P5, P6, P7, P8, P9, P10>>
 {
-  void print(std::ostream& res, bool first, bool opt=true)
+  void print(std::ostream &res, bool first, bool opt = true)
   {
     printarg<P1>().print(res, first, opt);
     printarg<P2>().print(res, first, opt);
@@ -118,8 +125,8 @@ struct printarg<bpy::optional<P1, P2, P3, P4, P5, P6, P7, P8, P9, P10> >
   }
 };
 
-template<class P1, class P2, class P3, class P4, class P5, class P6,
-         class P7, class P8, class P9, class P10>
+template <class P1, class P2, class P3, class P4, class P5, class P6, class P7,
+          class P8, class P9, class P10>
 static const std::string printargs()
 {
   std::stringstream res;
@@ -140,14 +147,13 @@ static const std::string printargs()
 /** --------------------------------------------------------------------------*/
 
 /** Singleton implementation */
-template<class T, typename B,
-         class P1, class P2, class P3, class P4, class P5, class P6,
-         class P7, class P8, class P9, class P10>
-CoreCreator<T, B, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10>*
-CoreCreator<T, B, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10>::single
-(CoreCreator* singleton)
+template <class T, typename B, class P1, class P2, class P3, class P4, class P5,
+          class P6, class P7, class P8, class P9, class P10>
+CoreCreator<T, B, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10> *
+CoreCreator<T, B, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10>::single(
+  CoreCreator *singleton)
 {
-  static CoreCreator* _single = NULL;
+  static CoreCreator *_single = NULL;
   if (singleton != NULL && _single == NULL) {
     _single = singleton;
   }
@@ -168,12 +174,10 @@ CoreCreator<T, B, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10>::single
 #define _tc_str(a) #a
 #endif
 
-template<class T, typename B,
-         class P1, class P2, class P3, class P4, class P5, class P6,
-         class P7, class P8, class P9, class P10>
-CoreCreator<T, B, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10>::
-CoreCreator(const ParameterTable* table, const char* name,
-            voidfunc extra) :
+template <class T, typename B, class P1, class P2, class P3, class P4, class P5,
+          class P6, class P7, class P8, class P9, class P10>
+CoreCreator<T, B, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10>::CoreCreator(
+  const ParameterTable *table, const char *name, voidfunc extra) :
   ArgListProcessor(table, core_creator_name<T>(name)),
   extracall(extra),
   name(core_creator_name<T>(name))
@@ -184,7 +188,7 @@ CoreCreator(const ParameterTable* table, const char* name,
 
   if (DuecaEnv::scriptInstructions(this->name)) {
     printCoreCreationCall(cout, this->name,
-                          printargs<P1,P2,P3,P4,P5,P6,P7,P8,P9,P10>());
+                          printargs<P1, P2, P3, P4, P5, P6, P7, P8, P9, P10>());
   }
   else if (!DuecaEnv::scriptSpecific()) {
     cout << "Adding object (" << this->name;
@@ -197,11 +201,10 @@ CoreCreator(const ParameterTable* table, const char* name,
                                    core_creator_name<B>(name), ifunct);
 }
 
-template<class T, typename B,
-         class P1, class P2, class P3, class P4, class P5, class P6,
-         class P7, class P8, class P9, class P10>
-CoreCreator<T, B, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10>::
-CoreCreator(const char* name, voidfunc extra) :
+template <class T, typename B, class P1, class P2, class P3, class P4, class P5,
+          class P6, class P7, class P8, class P9, class P10>
+CoreCreator<T, B, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10>::CoreCreator(
+  const char *name, voidfunc extra) :
   ArgListProcessor(NULL, core_creator_name<T>(name)),
   extracall(extra),
   name(core_creator_name<T>(name))
@@ -212,7 +215,7 @@ CoreCreator(const char* name, voidfunc extra) :
 
   if (DuecaEnv::scriptInstructions(this->name)) {
     printCoreCreationCall(cout, this->name,
-                          printargs<P1,P2,P3,P4,P5,P6,P7,P8,P9,P10>());
+                          printargs<P1, P2, P3, P4, P5, P6, P7, P8, P9, P10>());
   }
   else if (!DuecaEnv::scriptSpecific()) {
     cout << "Adding virt   (" << this->name << ")" << endl;
@@ -221,13 +224,11 @@ CoreCreator(const char* name, voidfunc extra) :
                                    core_creator_name<B>(name), ifunct0);
 }
 
-template<class T, typename B,
-         class P1, class P2, class P3, class P4, class P5, class P6,
-         class P7, class P8, class P9, class P10>
-CoreCreator<T, B, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10>::
-CoreCreator(const ParameterTable* table,
-            ArgListProcessor::Strategy strategy,
-            voidfunc extra, const char* name) :
+template <class T, typename B, class P1, class P2, class P3, class P4, class P5,
+          class P6, class P7, class P8, class P9, class P10>
+CoreCreator<T, B, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10>::CoreCreator(
+  const ParameterTable *table, ArgListProcessor::Strategy strategy,
+  voidfunc extra, const char *name) :
   ArgListProcessor(table, core_creator_name<T>(name), strategy),
   extracall(extra),
   name(core_creator_name<T>(name))
@@ -238,7 +239,7 @@ CoreCreator(const ParameterTable* table,
 
   if (DuecaEnv::scriptInstructions(this->name)) {
     printCoreCreationCall(cout, this->name,
-                          printargs<P1,P2,P3,P4,P5,P6,P7,P8,P9,P10>());
+                          printargs<P1, P2, P3, P4, P5, P6, P7, P8, P9, P10>());
   }
   else if (!DuecaEnv::scriptSpecific()) {
     cout << "Adding object (" << this->name;
@@ -251,52 +252,59 @@ CoreCreator(const ParameterTable* table,
                                    core_creator_name<B>(name), ifunct);
 }
 
-template<class T, typename B,
-         class P1, class P2, class P3, class P4, class P5, class P6,
-         class P7, class P8, class P9, class P10>
-const char* CoreCreator<T, B, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10>::
-callName() const
+template <class T, typename B, class P1, class P2, class P3, class P4, class P5,
+          class P6, class P7, class P8, class P9, class P10>
+const char *
+CoreCreator<T, B, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10>::callName() const
 {
   return name;
 }
 
-
-template<class T, typename B,
-         class P1, class P2, class P3, class P4, class P5, class P6,
-         class P7, class P8, class P9, class P10>
+template <class T, typename B, class P1, class P2, class P3, class P4, class P5,
+          class P6, class P7, class P8, class P9, class P10>
 CoreCreator<T, B, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10>::~CoreCreator()
 {
   //
 }
 
-template<class T>
-void* get_object_ptr
-  (const boost::intrusive_ptr<ScriptCreatableDataHolder<T> >&ptr)
+template <class T>
+void *
+get_object_ptr(const boost::intrusive_ptr<ScriptCreatableDataHolder<T>> &ptr)
 {
-  DEB("get_object_ptr, ScriptCreatableDataHolder " <<
-      reinterpret_cast<void*>(&(ptr->data())));
-  return reinterpret_cast<void*>(&(ptr->data()));
+  DEB("get_object_ptr, ScriptCreatableDataHolder "
+      << reinterpret_cast<void *>(&(ptr->data())));
+  return reinterpret_cast<void *>(&(ptr->data()));
 }
 
-template<class T>
-void* get_object_ptr
-  (const boost::intrusive_ptr<T>&ptr)
+template <class T> void *get_object_ptr(const boost::intrusive_ptr<T> &ptr)
 {
   DEB("get_object_ptr, direct");
-  return reinterpret_cast<void*>(ptr.get());
+  return reinterpret_cast<void *>(ptr.get());
 }
 
-template<class T, typename B,
-         class P1, class P2, class P3, class P4, class P5, class P6,
-         class P7, class P8, class P9, class P10>
-bpy::object
-CoreCreator<T, B, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10>::
-c_param(bpy::tuple args, bpy::dict kwargs)
+static ReferenceHolderPython *getOrCreatePythonHolder(void *_obj)
 {
-  bpy::extract<boost::intrusive_ptr<T> > objectptr(args[0]);
+  auto object = reinterpret_cast<ScriptCreatable *>(_obj);
+  auto rh = dynamic_cast<ReferenceHolderPython *>(object->getHolder().get());
+  if (rh == NULL) {
+    auto rhnew = new ReferenceHolderPython();
+    object->setHolder(rhnew);
+    return rhnew;
+  }
+  return rh;
+}
+
+template <class T, typename B, class P1, class P2, class P3, class P4, class P5,
+          class P6, class P7, class P8, class P9, class P10>
+bpy::object CoreCreator<T, B, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10>::c_param(
+  bpy::tuple args, bpy::dict kwargs)
+{
+  bpy::extract<boost::intrusive_ptr<T>> objectptr(args[0]);
+
   if (objectptr.check()) {
+    auto holder = getOrCreatePythonHolder(get_object_ptr(objectptr()));
     ArgElement::arglist_t paramlist;
-    if (!single()->processList(kwargs, args, paramlist) ||
+    if (!single()->processList(kwargs, args, paramlist, holder) ||
         !single()->injectValues(paramlist, get_object_ptr(objectptr()))) {
       objectptr()->argumentError();
     }
@@ -312,10 +320,9 @@ c_param(bpy::tuple args, bpy::dict kwargs)
   return args[0];
 }
 
-template<class T>
-bpy::object wrap_complete(bpy::object _self)
+template <class T> bpy::object wrap_complete(bpy::object _self)
 {
-  bpy::extract<boost::intrusive_ptr<T> > self(_self);
+  bpy::extract<boost::intrusive_ptr<T>> self(_self);
   if (self.check() && self()->checkComplete()) {
     return _self;
   }
@@ -331,38 +338,38 @@ bpy::object wrap_complete(bpy::object _self)
   return bpy::object();
 }
 
-template<class T, typename B,
-         class P1, class P2, class P3, class P4, class P5, class P6,
-         class P7, class P8, class P9, class P10>
+template <class T, typename B, class P1, class P2, class P3, class P4, class P5,
+          class P6, class P7, class P8, class P9, class P10>
 void CoreCreator<T, B, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10>::ifunct()
 {
   std::stringstream helpdoc;
-  single()->printCoreCreationCall
-    (helpdoc, single()->name, printargs<P1,P2,P3,P4,P5,P6,P7,P8,P9,P10>());
-  bpy::class_<T, bpy::bases<B>, boost::intrusive_ptr<T>, boost::noncopyable >
-    (single()->name, helpdoc.str().c_str(),
-     bpy::init<P1,P2,P3,P4,P5,P6,P7,P8,P9,P10>())
+  single()->printCoreCreationCall(
+    helpdoc, single()->name,
+    printargs<P1, P2, P3, P4, P5, P6, P7, P8, P9, P10>());
+  bpy::class_<T, bpy::bases<B>, boost::intrusive_ptr<T>, boost::noncopyable>(
+    single()->name, helpdoc.str().c_str(),
+    bpy::init<P1, P2, P3, P4, P5, P6, P7, P8, P9, P10>())
     .def("param", bpy::raw_function(c_param, 1))
     .def("complete", wrap_complete<T>);
-  if (single()->extracall != NULL) (*single()->extracall)();
+  if (single()->extracall != NULL)
+    (*single()->extracall)();
   DEB("CoreCreator " << single()->name);
 }
 
-
-template<class T, typename B,
-         class P1, class P2, class P3, class P4, class P5, class P6,
-         class P7, class P8, class P9, class P10>
+template <class T, typename B, class P1, class P2, class P3, class P4, class P5,
+          class P6, class P7, class P8, class P9, class P10>
 void CoreCreator<T, B, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10>::ifunct0()
 {
   std::stringstream helpdoc;
-  single()->printCoreCreationCall
-    (helpdoc, single()->name, printargs<P1,P2,P3,P4,P5,P6,P7,P8,P9,P10>());
-  bpy::class_<T, bpy::bases<B>, boost::intrusive_ptr<T>, boost::noncopyable >
-    (single()->name, helpdoc.str().c_str(), bpy::no_init);
-  if (single()->extracall != NULL) (*single()->extracall)();
+  single()->printCoreCreationCall(
+    helpdoc, single()->name,
+    printargs<P1, P2, P3, P4, P5, P6, P7, P8, P9, P10>());
+  bpy::class_<T, bpy::bases<B>, boost::intrusive_ptr<T>, boost::noncopyable>(
+    single()->name, helpdoc.str().c_str(), bpy::no_init);
+  if (single()->extracall != NULL)
+    (*single()->extracall)();
   DEB("CoreCreator, virtual " << single()->name);
 }
-
 
 DUECA_NS_END
 

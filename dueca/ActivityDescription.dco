@@ -16,6 +16,8 @@
 ;; to communicate data for the activity visualisation
 (Event ActivityDescription
 
+       (Option msgpack)
+
        ;; Name of the activity, limited to 31 characters
        (string32 name)
 

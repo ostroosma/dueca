@@ -405,7 +405,7 @@ void ShmAccessor::write(volatile uint32_t* address, uint32_t value)
   }
 }
 
-void ShmAccessor::prepareToStop()
+void ShmAccessor::prepareToStop(TimeTickType tick)
 {
   // switch off the blocking mode
   block.switchOff(TimeSpec(0,0));

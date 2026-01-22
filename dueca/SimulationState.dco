@@ -61,6 +61,7 @@
  )
 
 (Event SimulationState
+       (Option msgpack)
        (IncludeFile SimulationStateExtra)
        ;; the actual state
        (Type t (Default Undefined))

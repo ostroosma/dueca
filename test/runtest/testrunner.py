@@ -64,14 +64,16 @@ known_windows = dict()
 
 
 def findWindow(name: str):
+    print(f"...Looking for window {name}")
     for w in Window.list():
         if w.wm_name not in known_windows:
             known_windows[w.wm_name] = (w.x, w.y)
-            print(f"{w.wm_name} {w.wm_state} at {w.x},{w.y} size {w.w},{w.h}")
+            print(f"Found window {w.wm_name} {w.wm_state} at {w.x},{w.y} size {w.w},{w.h}")
         elif known_windows[w.wm_name] != (w.x, w.y):
             known_windows[w.wm_name] = (w.x, w.y)
-            print(f"{w.wm_name} {w.wm_state} to {w.x},{w.y} size {w.w},{w.h}")
+            print(f"Window moved {w.wm_name} {w.wm_state} to {w.x},{w.y} size {w.w},{w.h}")
         if w.wm_name == name:
+            print(f"Matching window found")
             return w
     return None
 
@@ -79,6 +81,7 @@ def findWindow(name: str):
 def findWindowUnder(wlist, x: int, y: int, recording=False, margin=0):
     global translation
     foundwin = None
+    print(f"...Looking for the window under {x}, {y}")
 
     if margin:
         # first try without
@@ -222,24 +225,29 @@ class Click:
         global the_mouse
         global translation
 
-        print(f"click {self.window} {self.x},{self.y} {self.button}, {self.pressed}")
+        print(f"...Try click {self.window} {self.x},{self.y} {self.button}, {self.pressed}")
 
         if self.window:
             w = findWindow(self.window)
             if w is None:
-                raise ValueError(f"Cannot find window {self.window}")
-            x, y = translation.toScreen(self.x, self.y, w)
+                if self.pressed:
+                    raise ValueError(f"Cannot find window {self.window}")
+            else:
+                x, y = translation.toScreen(self.x, self.y, w)
+                the_mouse.position = x, y
         else:
             x, y = self.x, self.y
+            the_mouse.position = x, y
 
-        the_mouse.position = x, y
         if self.wait > 0.0:
             await asyncio.sleep(self.wait)
 
         if self.pressed:
             the_mouse.press(self.button)
+            print("Mouse pressed")
         else:
             the_mouse.release(self.button)
+            print("Mouse released")
 
 
 class KeyPress:
@@ -275,7 +283,7 @@ class KeyPress:
         global the_keyboard
         global translation
 
-        print(f"key {self.window} {self.x},{self.y} '{self.key}'")
+        print(f"...Try key {self.window} {self.x},{self.y} '{self.key}'")
 
         if self.window:
             w = findWindow(self.window)
@@ -287,8 +295,6 @@ class KeyPress:
             x, y = self.x, self.y
 
         the_mouse.position = x, y
-        if self.wait:
-            await asyncio.sleep(self.wait)
 
         the_keyboard.press(self.key)
         await asyncio.sleep(self.wait)
@@ -362,7 +368,7 @@ class Check:
     async def execute(self):
 
         print(
-            f"check {self.window} {self.x},{self.y} {self.wait}+{self.timeout} {self.color}"
+            f"...Check {self.window} {self.x},{self.y} {self.wait}+{self.timeout} {self.color}"
         )
         # simply run in 100 sleep increments
 
@@ -410,10 +416,12 @@ class Check:
                 )
                 col = under_cursor.getcolors(1)[0][1]
                 if col == self.color:
+                    print(f"Color {self.color} found")
                     return True
 
             # no color was specified, exit if just looked for a window
             elif self.window is not None:
+                print(f"Window {self.window} found")
                 return True
 
         # no window or color found, create a snapshot and increase errror count
@@ -434,10 +442,11 @@ class Check:
                 f"{self.x}, {self.y} after {cnt+1} checks, found {col}"
             )
         if self.window is None and self.color is None:
-            # no check, just timeout and wait
+            print(f"Wait {self.wait}+{self.timeout} performed")
             return True
 
         Check.errcnt += 1
+        print("Check failed")
         return False
 
 
@@ -595,7 +604,7 @@ class Scenario:
             if self.offset is None:
                 self.offset = Offset(xmlroot=self.xmltree, x=self.x-window.x, y=self.y-window.y)
             return True
- 
+
         elif key in (Key.esc,):
             return False
 
@@ -776,7 +785,7 @@ class DuecaRunner:
                 raise RuntimeError(
                     f"Failing clean for {self.project}:\n{c1.stderr}"
                 )
-            
+
             c1 = subprocess.run(
                 ["dueca-gproject", "build"] + self.buildoptions,
                 cwd=f"{self.pdir}",
@@ -838,7 +847,7 @@ class DuecaRunner:
         )
         stdout, stderr = await duecaprocess.communicate()
         print(
-            f"Dueca task for {self.project} on {node} ended, {duecaprocess.returncode}"
+            f"Run task for {self.project} on {node} ended, {duecaprocess.returncode}"
         )
         print(f"\nNormal out {node}\n{stdout.decode()}")
         print(f"\nError out {node}\n{stderr.decode()}")

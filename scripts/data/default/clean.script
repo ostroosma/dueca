@@ -5,7 +5,7 @@
 # clean dueca stuff
 clean-dueca-rundir
 
-# clean symbolic links
+# clean all symbolic links
 find . -type l -exec rm {} \;
 
 # clean run script

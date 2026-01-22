@@ -25,6 +25,7 @@
 #include <dueca/DataWriter.hxx>
 #include <StatusKeeper.hxx>
 #include "DuecaView.hxx"
+#include "EntityUpdate.hxx"
 #include <boost/lexical_cast.hpp>
 #define E_MOD
 #define W_MOD

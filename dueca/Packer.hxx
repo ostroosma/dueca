@@ -73,7 +73,7 @@ public:
                         int n_stores, int store_size);
 
   /** Stop packing, used at destruction time. */
-  void stopPacking();
+  void stopPacking(TimeTickType tick);
 
   /** Returns the store to send in the variable store_no,
       returns the fill level of the current store. */

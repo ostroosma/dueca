@@ -23,6 +23,7 @@
 #include "AsyncQueueMT.hxx"
 #include "MessageBuffer.hxx"
 #include <oddoptions.h>
+#include <SimTime.hxx>
 
 DUECA_NS_START
 
@@ -75,7 +76,7 @@ protected:
   virtual const char* getTypeName();
 
   /** Being warned by the packer that we are going to stop. */
-  virtual void prepareToStop() = 0;
+  virtual void prepareToStop(TimeTickType tick) = 0;
 
   /** The only one who may call prepareToStop. */
   friend class GenericPacker;

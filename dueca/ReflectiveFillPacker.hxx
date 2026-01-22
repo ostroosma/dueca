@@ -112,7 +112,7 @@ public:
   void initialise(const ReflectiveStoreInformation& i);
 
   /** Stop packing, used at destruction time. */
-  void stopPacking();
+  void stopPacking(TimeTickType tick);
 
 private:
   /** Internal routine, pack all the stuff left. */

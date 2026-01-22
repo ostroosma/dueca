@@ -27,6 +27,10 @@
 #include "debug.h"
 #include <boost/lexical_cast.hpp>
 #include <boost/format.hpp>
+#include <regex>
+
+#define DEBPRINTLEVEL -1
+#include <debprint.h>
 
 DUECA_NS_START
 
@@ -96,6 +100,76 @@ bool GtkGladeWindow::readGladeFile(const char *file, const char *mainwidget,
   return true;
 }
 
+namespace {
+
+struct AllWidgets
+{
+  // list of found widgets
+  GSList *list;
+
+  // current iterating widget
+  GSList *current;
+
+  // object
+  GObject *object;
+
+  // regexp object
+  std::regex matcher;
+
+  AllWidgets(GtkBuilder *builder, const char *name) :
+    list(nullptr),
+    current(nullptr),
+    matcher()
+  {
+    if (!strncmp(name, "regex:", 6)) {
+      matcher = std::regex(&name[6]);
+      list = gtk_builder_get_objects(builder);
+      current = list;
+    }
+    else {
+      object = gtk_builder_get_object(builder, name);
+    }
+  }
+
+  ~AllWidgets()
+  {
+    if (list) {
+      g_slist_free(list);
+    }
+  }
+
+  GObject *operator()()
+  {
+    if (list) {
+      while (current) {
+        DEB("Testing "
+            << (GTK_IS_BUILDABLE(current->data) &&
+                    gtk_buildable_get_name(GTK_BUILDABLE(current->data))
+                  ? gtk_buildable_get_name(GTK_BUILDABLE(current->data))
+                  : "anon"));
+        if (GTK_IS_BUILDABLE(current->data) &&
+            gtk_buildable_get_name(GTK_BUILDABLE(current->data)) &&
+            std::regex_match(
+              gtk_buildable_get_name(GTK_BUILDABLE(current->data)), matcher)) {
+          DEB("Match");
+          GObject *res = G_OBJECT(current->data);
+          current = current->next;
+          return res;
+        }
+        current = current->next;
+      }
+      return nullptr;
+    }
+
+    // no list return non-null only once
+    GObject *res = object;
+    object = nullptr;
+    return res;
+  }
+};
+
+} // namespace
+
 void GtkGladeWindow::connectCallbacks(gpointer client,
                                       const GladeCallbackTable *table,
                                       bool warn)
@@ -104,14 +178,17 @@ void GtkGladeWindow::connectCallbacks(gpointer client,
   while (cbl->widget) {
 
     // lookup the widget and link the function
-    GObject *b = gtk_builder_get_object(builder, cbl->widget);
+    AllWidgets wdgts(builder, cbl->widget);
+    GObject *b = wdgts();
     if (b) {
-      GtkCaller *caller = cbl->func->clone(client);
-      caller->setGPointer(cbl->user_data);
-      // link the callback function
-      g_signal_connect(b, cbl->signal, caller->callback(), caller);
+      while (b) {
+        GtkCaller *caller = cbl->func->clone(client);
+        caller->setGPointer(cbl->user_data);
+        // link the callback function
+        g_signal_connect(b, cbl->signal, caller->callback(), caller);
+        b = wdgts();
+      }
     }
-
     else if (warn) {
       /* DUECA graphics.
 
@@ -135,12 +212,16 @@ void GtkGladeWindow::connectCallbacksAfter(gpointer client,
   while (cbl->widget) {
 
     // lookup the widget and link the function
-    GObject *b = gtk_builder_get_object(builder, cbl->widget);
+    AllWidgets wdgts(builder, cbl->widget);
+    GObject *b = wdgts();
     if (b) {
-      GtkCaller *caller = cbl->func->clone(client);
-      caller->setGPointer(cbl->user_data);
+      while (b) {
+        GtkCaller *caller = cbl->func->clone(client);
+        caller->setGPointer(cbl->user_data);
       // link the callback function
-      g_signal_connect_after(b, cbl->signal, caller->callback(), caller);
+        g_signal_connect_after(b, cbl->signal, caller->callback(), caller);
+        b = wdgts();
+      }
     }
 
     else if (warn) {
@@ -270,35 +351,13 @@ bool GtkGladeWindow::_setValue(const char *wname, const char *value, bool warn)
 
   if (GTK_IS_COMBO_BOX(o)) {
 
-    // find the model, and determine where the value is (should be there!)
-    GtkTreeModel *mdl = gtk_combo_box_get_model(GTK_COMBO_BOX(o));
-    GtkTreeIter it;
-    gboolean itvalid = gtk_tree_model_get_iter_first(mdl, &it);
-    gchararray val = NULL;
-    gtk_tree_model_get(mdl, &it, 0, &val, -1);
-
-    while (itvalid && strcmp(val, value)) {
-      itvalid = gtk_tree_model_iter_next(mdl, &it);
-      if (itvalid)
-        gtk_tree_model_get(mdl, &it, 0, &val, -1);
-    }
-    if (itvalid) {
-      gtk_combo_box_set_active_iter(GTK_COMBO_BOX(o), &it);
+    if (gtk_combo_box_set_active_id(GTK_COMBO_BOX(o), value) == TRUE) {
       return true;
     }
+    gtk_combo_box_set_active_id(GTK_COMBO_BOX(o), NULL);
+    W_XTR("GtkGladeWindow::setValue: No matching item for gtk combo \""
+          << wname << "\", missing \"" << value << '"');
 
-    // no valid match found
-    gtk_combo_box_set_active_iter(GTK_COMBO_BOX(o), NULL);
-    if (warn) {
-      /* DUECA graphics.
-
-         Failed to find the matching entry (string) when trying to set
-         the active GtkComboBox entry. Do the entry names (column 0 of
-         your GtkListStore) match the names of the DCO member's enum?
-      */
-      W_XTR("GtkGladeWindow::setValue: No matching item for gtk combo \""
-            << wname << "\", missing \"" << value << '"');
-    }
     return false;
   }
 
@@ -485,11 +544,8 @@ bool GtkGladeWindow::__getValue<std::string>(const char *wname, boost::any &b,
   }
 
   if (GTK_IS_COMBO_BOX(o)) {
-    GtkTreeIter it;
-    if (gtk_combo_box_get_active_iter(GTK_COMBO_BOX(o), &it)) {
-      GtkTreeModel *treemodel = gtk_combo_box_get_model(GTK_COMBO_BOX(o));
-      gchararray val;
-      gtk_tree_model_get(treemodel, &it, 0, &val, -1);
+    const char *val = gtk_combo_box_get_active_id(GTK_COMBO_BOX(o));
+    if (val) {
       b = std::string(val);
     }
     else {
@@ -555,6 +611,20 @@ bool GtkGladeWindow::__getValue<std::string>(const char *wname, boost::any &b,
   return false;
 }
 
+// explicit, maybe needed for Ubuntu 22.04
+template
+bool GtkGladeWindow::__getValue<uint32_t>(const char* name, boost::any &value, bool warn);
+template
+bool GtkGladeWindow::__getValue<uint64_t>(const char* name, boost::any &value, bool warn);
+template
+bool GtkGladeWindow::__getValue<int32_t>(const char* name, boost::any &value, bool warn);
+template
+bool GtkGladeWindow::__getValue<int64_t>(const char* name, boost::any &value, bool warn);
+template
+bool GtkGladeWindow::__getValue<float>(const char* name, boost::any &value, bool warn);
+template
+bool GtkGladeWindow::__getValue<double>(const char* name, boost::any &value, bool warn);
+
 bool GtkGladeWindow::_getValue(const char *wname, const CommObjectWriter &cor,
                                unsigned im, boost::any &value, bool warn)
 {
@@ -604,8 +674,19 @@ bool GtkGladeWindow::_getValue(const char *wname, const CommObjectWriter &cor,
   return false;
 }
 
-unsigned GtkGladeWindow::setValues(CommObjectReader &dco, const char *format,
-                                   const char *arrformat, bool warn)
+template <>
+unsigned GtkGladeWindow::setValues<DCOReader>(DCOReader &dco,
+                                              const char *format,
+                                              const char *arrformat, bool warn)
+{
+  return setValues<CommObjectReader>(dco, format, arrformat, warn);
+}
+
+template <>
+unsigned GtkGladeWindow::setValues<CommObjectReader>(CommObjectReader &dco,
+                                                     const char *format,
+                                                     const char *arrformat,
+                                                     bool warn)
 {
   unsigned nset = 0;
   char gtkid[128];
@@ -737,8 +818,19 @@ bool GtkGladeWindow::_setRadiosFromEnum(const char *gtkid,
   return false;
 }
 
-unsigned GtkGladeWindow::getValues(CommObjectWriter &dco, const char *format,
-                                   const char *arrformat, bool warn)
+template <>
+unsigned GtkGladeWindow::getValues<DCOWriter>(DCOWriter &dco,
+                                              const char *format,
+                                              const char *arrformat, bool warn)
+{
+  return getValues<CommObjectWriter>(dco, format, arrformat, warn);
+}
+
+template <>
+unsigned GtkGladeWindow::getValues<CommObjectWriter>(CommObjectWriter &dco,
+                                                     const char *format,
+                                                     const char *arrformat,
+                                                     bool warn)
 {
   unsigned nset = 0;
   char gtkid[128];
@@ -878,12 +970,14 @@ bool GtkGladeWindow::_fillOptions(const char *wname, ElementWriter &writer,
   }
 
   GtkTreeModel *treemodel = gtk_combo_box_get_model(GTK_COMBO_BOX(o));
-  if (treemodel == NULL) {
+  if (treemodel == NULL ||
+      gtk_tree_model_get_n_columns(treemodel) < ((mapping != NULL) ? 2 : 1)) {
     treemodel = GTK_TREE_MODEL(
       mapping != NULL ? gtk_list_store_new(2, G_TYPE_STRING, G_TYPE_STRING)
                       : gtk_list_store_new(1, G_TYPE_STRING));
     gtk_combo_box_set_model(GTK_COMBO_BOX(o), treemodel);
   }
+  gtk_combo_box_set_id_column(GTK_COMBO_BOX(o), (mapping != NULL) ? 1 : 0);
 
   GtkListStore *store = GTK_LIST_STORE(treemodel);
   if (store == NULL) {
@@ -910,7 +1004,7 @@ bool GtkGladeWindow::_fillOptions(const char *wname, ElementWriter &writer,
       const char *repr = _searchInMap(mapping, value.c_str(), warn);
       if (repr) {
         gtk_list_store_append(store, &it);
-        gtk_list_store_set(store, &it, 0, value.c_str(), 1, repr, -1);
+        gtk_list_store_set(store, &it, 1, value.c_str(), 0, repr, -1);
       }
     }
     else {
@@ -1024,5 +1118,7 @@ bool GtkGladeWindow::setValue<char *>(char *const &value, const char *name,
   auto res = _setValue(name, value, warn);
   return res;
 }
+
+
 
 DUECA_NS_END

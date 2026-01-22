@@ -33,6 +33,8 @@
 #include <boost/python.hpp>
 #endif
 
+#include "ReferenceHolderPython.hxx"
+
 #define DEBPRINTLEVEL -1
 #include <debprint.h>
 
@@ -633,33 +635,12 @@ void ArgListProcessor::processSomeValue
 }
 #endif
 
-#ifdef SCRIPT_SCHEME
-struct ArgListProcessor_Private
-{
-
-};
-#endif
-
-#ifdef SCRIPT_PYTHON
-struct ArgListProcessor_Private
-{
-  //bpy::list refs;
-  boost::scoped_ptr<bpy::list> _refs;
-  ArgListProcessor_Private() : _refs() { }
-
-  bpy::list &refs() {
-    if (!_refs) { _refs.reset(new bpy::list); }
-    return *_refs;
-  }
-};
-#endif
 
 
 
 ArgListProcessor::ArgListProcessor(const ParameterTable* table,
                                    const std::string& name,
                                    Strategy strat) :
-  my(new ArgListProcessor_Private()),
   table(table),
   strategy(strat),
   name(name)
@@ -788,7 +769,8 @@ bool ArgListProcessor::processPairs
 template<>
 bool ArgListProcessor::processList<bpy::dict>(const bpy::dict& kwargs,
                                               const bpy::tuple& args,
-                                              ArgElement::arglist_t& processed) const
+                                              ArgElement::arglist_t& processed,
+                                              ReferenceHolderPython *my) const
 {
   // an index to keep count with the different arguments.
   unsigned process_idx = 0U;

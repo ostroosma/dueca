@@ -31,7 +31,7 @@ from datetime import date
 from lxml import etree
 import duecautils
 from duecautils.modules import Modules, projectSplit, \
-    checkGitUrl, RootMap
+    checkGitUrl, RootMap, MainOrMaster
 from duecautils.machinemapping import NodeMachineMapping
 from duecautils.githandler import GitHandler
 from duecautils.verboseprint import dprint
@@ -392,7 +392,7 @@ class NewProject:
 
         # check that the local disk is free
         if os.path.exists(ns.name):
-            raise Exception(
+            raise FileExistsError(
                 f"Folder {ns.name} already exists, cannot create project")
 
         # check that the remote project is clean/has not code
@@ -414,6 +414,7 @@ class NewProject:
         # initialize git repository
         repo = git.Repo.init(
             '{project}/{project}'.format(project=ns.name))
+        repo.active_branch.rename("main")
 
         # add the default config files
         cnfdef = ChainMap(
@@ -434,7 +435,7 @@ class NewProject:
         # add the remote and push results
         if ns.remote:
             repo.create_remote('origin', RootMap().urlToAbsolute(ns.remote))
-            repo.git.push('--set-upstream', 'origin', 'master')
+            repo.git.push('--set-upstream', 'origin', 'main')
 
         print(f"Created new DUECA project {ns.name}")
 
@@ -473,7 +474,7 @@ class CloneProject:
 
         # check that the local disk is free
         if os.path.exists(name):
-            raise Exception(
+            raise FileExistsError(
                 f"Folder {name} already exists, cannot clone project there.")
 
         os.mkdir(name)
@@ -499,13 +500,14 @@ class CloneProject:
         try:
             orig.fetch()
         except git.GitCommandError as e:
-            print(f"Cannot fetch from {RootMap().urlToAbsolute(ns.remote)}\n"
+            print(f"Cannot fetch from {RootMap().urlToAbsolute(ns.remote)}: {e}\n"
                   "Clone failed, check url and access rights")
             sys.exit(-1)
         dprint("check out on branch", ns.version)
-        branch = repo.create_head('master', orig.refs.master)
-        branch.set_tracking_branch(orig.refs.master)
-        if ns.version != 'master':
+        remotemain = MainOrMaster(orig)
+        if ns.version == 'master':
+            ns.version = str(remotemain)
+        if ns.version not in ('master', 'main'):
             branch = repo.create_head(ns.version, orig.refs[ns.version])
             branch.set_tracking_branch(orig.refs[ns.version])
 
@@ -575,8 +577,7 @@ class OnExistingProject():
         if len(curpath) < 2 or curpath[-1] != curpath[-2]:
             print(f"Could not find project folder in {os.getcwd()}",
                   file=sys.stderr)
-            raise Exception(f"dueca-gproject {command} needs to be run from"
-                            " the main project directory")
+            raise FileNotFoundError("Cannot find a project directory here")
 
         self.project = curpath[-1]
         self.projectdir = projectdir
@@ -703,7 +704,7 @@ class BorrowModule(OnExistingProject):
         parser.add_argument(
             '--version', type=str,
             help="Version, branch, commit revision to borrow. If empty,"
-                 "the master branch is used.")
+                 "the main branch is used.")
         parser.set_defaults(handler=BorrowModule)
 
     def __call__(self, ns):
@@ -747,7 +748,7 @@ class BorrowProject(OnExistingProject):
         parser.add_argument(
             '--version', type=str,
             help="Version, branch, commit revision to borrow. If empty,"
-                 "the master branch is used.")
+                 "the main branch is used.")
         parser.set_defaults(handler=BorrowProject)
 
     def __call__(self, ns):
@@ -791,9 +792,9 @@ class CopyModule(OnExistingProject):
             '--remote', type=str, required=True,
             help="Remote URL from where the module is copied.")
         parser.add_argument(
-            '--version', type=str, default='HEAD',
+            '--version', type=str, default='main',
             help="Version, branch, export revision to copy. If empty,"
-                 "the master branch is used.")
+                 "the main branch is used.")
         parser.add_argument(
             '--newname', type=str, default='',
             help="New name of the copied module, if specified")
@@ -862,7 +863,7 @@ class Refresh(OnExistingProject):
             if ns.machineclass:
                 mclasses = os.listdir('.config/class')
                 if ns.machineclass not in mclasses:
-                    raise Exception(f"Machine class {ns.machineclass} does not exist")
+                    raise ValueError(f"Machine class {ns.machineclass} does not exist")
 
                 with open(f'{self.projectdir}/.config/machine', 'w') as m:
                     m.write(str(ns.machineclass)+'\n')
@@ -918,7 +919,7 @@ class NewPlatform(OnExistingProject):
             self.pushDir()
 
             if os.path.exists(f"{self.projectdir}/run/{ns.name}"):
-                raise Exception(f"Platform {ns.name} already exists")
+                raise FileExistsError(f"Platform {ns.name} already exists")
             os.mkdir(f'{self.projectdir}/run/{ns.name}')
             g = GitHandler(self.project)
             g.addFolder(f'{self.projectdir}/run/{ns.name}')
@@ -946,6 +947,8 @@ NewPlatform.args(subparsers)
 
 
 class NewNode(OnExistingProject):
+    """Create a new node.
+    """
 
     command = 'new-node'
 
@@ -1018,9 +1021,9 @@ class NewNode(OnExistingProject):
             self.pushDir()
 
             if os.path.exists(f'{self.projectdir}/run/{ns.platform}/{ns.name}'):
-                raise Exception(f"Node {ns.name} already exists in {ns.platform}")
+                raise FileExistsError(f"Node {ns.name} already exists in {ns.platform}")
             if ns.node_number < 0 or ns.node_number >= ns.num_nodes:
-                raise Exception(
+                raise ValueError(
                     'Node number must be smaller than number of nodes')
 
             scriptlang = self.checkScriptlang()
@@ -1113,7 +1116,7 @@ class NewMachineClass(OnExistingProject):
             self.pushDir()
 
             if os.path.exists(f'{self.projectdir}/.config/class/{ns.name}'):
-                raise Exception(f'Machine class {ns.name} already present')
+                raise FileExistsError(f'Machine class {ns.name} already present')
 
             g = GitHandler()
             tofill = {'projectdir': self.projectdir,
@@ -1552,20 +1555,23 @@ BuildProject.args(subparsers)
 #    'policies',
 #    '--policiesurl=file:///home/repa/dueca/test/gitscript/example-policies.xml']
 
-argcomplete.autocomplete(parser)
-pres = parser.parse_args(sys.argv[1:])
-#pres = parser.parse_args(testargs)
+if __name__ == '__main__':
+    argcomplete.autocomplete(parser)
 
-if pres.verbose:
-    duecautils.verboseprint._verbose_print = True
 
-# if successful, a handler has been provided
-try:
-    hclass = pres.handler
-except AttributeError:
-    parser.print_usage()
-    sys.exit(-1)
+    pres = parser.parse_args(sys.argv[1:])
+    #pres = parser.parse_args(testargs)
 
-# run the handler
-handler = hclass()
-handler(pres)
+    if pres.verbose:
+        duecautils.verboseprint._verbose_print = True
+
+    # if successful, a handler has been provided
+    try:
+        hclass = pres.handler
+    except AttributeError:
+        parser.print_usage()
+        sys.exit(-1)
+
+    # run the handler
+    handler = hclass()
+    handler(pres)

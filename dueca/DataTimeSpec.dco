@@ -23,9 +23,11 @@
 ;; make it smaller, but it also make the DataTimeSpec usable across a
 ;; reflective/shared memory device where a virtual table pointer
 ;; would be erroneous in all but one process.
-(EventAndStream DataTimeSpec
-                (IncludeFile DataTimeSpecExtra)
-                (AddToHeader "DUECA_NS_START;
+(Object DataTimeSpec
+
+        (Option msgpack)
+        (IncludeFile DataTimeSpecExtra)
+        (AddToHeader "DUECA_NS_START;
 typedef uint32_t TimeTickType;
 class TimeSpec;
 class PeriodicTimeSpec;

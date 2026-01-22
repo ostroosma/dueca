@@ -483,7 +483,9 @@ const GlobalId &WriteEntry::getId() { return master->getId(); }
 void WriteEntry::complete(const std::string &datatype, const std::string &label,
                           bool stream, bool ctiming, bool bulk, bool diffpack)
 {
-  this->datatype = datatype;
+  if (datatype.size()) {
+    this->datatype = datatype;
+  }
   this->ctiming = ctiming;
   this->stream = stream;
   if (stream && !ctiming) {
@@ -491,6 +493,9 @@ void WriteEntry::complete(const std::string &datatype, const std::string &label,
   }
   this->bulk = bulk;
   this->diffpack = diffpack;
+  if (DataClassRegistry::single().getConverter(this->datatype)) {
+    throw connectionparseerror();
+  }
 
   identification = channelname + std::string(" type:") + datatype +
                    std::string(" label:\"") + label + std::string("\"");
@@ -545,18 +550,20 @@ void WriteEntry::tokenValid(const TimeSpec &ts)
   }
 }
 
-template <>
-void WriteEntry::setConnection<std::shared_ptr<WsServer::Connection>>(
-  std::shared_ptr<WsServer::Connection> &c)
+void WriteEntry::setConnection(connection_t connection)
 {
-  connection = c;
+  DEB("WriteEntry set connection");
+  assert(!this->connection.get() && !this->sconnection.get());
+  this->connection = connection;
+  this->state = Connected;
 }
 
-template <>
-void WriteEntry::setConnection<std::shared_ptr<WssServer::Connection>>(
-  std::shared_ptr<WssServer::Connection> &c)
+void WriteEntry::setConnection(sconnection_t connection)
 {
-  sconnection = c;
+  DEB("WriteEntry set sconnection");
+  assert(!this->connection.get() && !this->sconnection.get());
+  this->sconnection = connection;
+  this->state = Connected;
 }
 
 void WriteEntry::sendOne(const std::string &data, const char *desc)
@@ -629,8 +636,10 @@ void PresetWriteEntry::complete(const std::string &datatype,
   if (_ctiming != this->ctiming || _stream != this->stream) {
     throw(presetmismatch());
   }
-  state = Linked;
-  checkToken();
+  state = Connected;
+  if (w_token->isValid()) {
+    tokenValid(TimeSpec());
+  }
 }
 
 void PresetWriteEntry::close(const char *reason, int status)

@@ -23,6 +23,8 @@
 #include "GtkCaller.hxx"
 #include "GladeException.hxx"
 #include <boost/any.hpp>
+#include <CommObjectReader.hxx>
+#include <CommObjectWriter.hxx>
 
 #define NO_COMBOBOX
 
@@ -139,6 +141,7 @@ struct GladeCallbackTable
 /** A GUI window directly from a glade interface file. Supply the
     interface file name, and a table of pointers to callback
     functions. As an example:
+
     @code{.cxx}
     class MyGui
     {
@@ -195,6 +198,20 @@ struct GladeCallbackTable
     value by specifying it in the last column of the
     GladeCallbackTable. This will help you re-use the same callback
     for different purposes.
+
+    If you want to link a callback function to multiple widgets, you
+    can use a regular expression to get the widget names, by indicating
+    you will use a regex:
+
+    @code{.cxx}
+    static GladeCallbackTable table[] =
+    {
+      // links the button, with signal pressed, to ButtonPress
+      { "regex:button[0-9]+", "pressed", gtk_callback(&MyGui::anyPress),
+        an_optional_gpointer_variable },
+      { NULL }
+    };
+    @endcode
 
     It is also possible to quickly link and load DCO objects to
     elements in your interface. Take the following dco object as an
@@ -289,20 +306,24 @@ struct GladeCallbackTable
     Some of the possible mappings between DCO members types and gtk4 widgets
   are:
 
-    | Data type      | Widgets                                            |
-    | -------------- | ---------------------------------------------------|
-    | float, double  | GtkAdjustment, GtkRange, GtkSpinButton, GtkEntry,
-  GtkDropDown | | int, long, short | as for float | | unsigned int, long, short
-  | as for float                            | | std::string    | GtkDropDown,
-  GtkEntry, GtkFileChooser              | | bool           | GtkToggleButton |
-    | enum           | GtkDropDown, GtkCheckButton (in radio group)       |
+  | Data type      | Widgets                                            |
+  | -------------- | ---------------------------------------------------|
+  | float, double  | GtkAdjustment, GtkRange, GtkSpinButton, GtkEntry, GtkDropDown |
+  | int, long, short | as for float                                     |
+  | unsigned int, long, short  | as for float                           |
+  | std::string    | GtkDropDown,  GtkEntry, GtkFileChooser             |
+  | bool           | GtkToggleButton                                    |
+  | enum           | GtkDropDown, GtkCheckButton (in radio group)       |
 
   To set a choice for an enum value with GtkCheckButtons in a radio group, give
-  the buttons the proper names (suffixed with "-enumvalue").
+  the buttons the proper names. As an example, if you would have enum
+  values `On` and `Off`, for the enum member `choice`, label your buttons
+  `myui_choice-On` and `myui_choice-Off`, in other words, you suffix the label
+  with `-` and the enum value.
 
-  These setting and getting actions that you can do with DCO objects, are
-  also available for simple variables (float, double, integer types,
-  std::string), through the setValue and getValue calls.
+  These setting and getting actions that
+  you can do with DCO objects, are also available for simple variables (float, 
+  double, integer types, std::string), through the setValue and getValue calls.
 
  */
 class GtkGladeWindow
@@ -525,8 +546,9 @@ public:
                        widget and datatype do not match.
       @returns         The number of successfully set values
    */
-  unsigned setValues(CommObjectReader &dco, const char *format,
-                     const char *arrformat = NULL, bool warn = false);
+  template <typename DCO>
+  unsigned setValues(DCO &dco, const char *format, const char *arrformat = NULL,
+                     bool warn = false);
 
   /** Find the current state of the interface and push into a DCO object.
 
@@ -545,8 +567,9 @@ public:
                        widget and datatype do not match.
       @returns         The number of successfully read values
    */
-  unsigned getValues(CommObjectWriter &dco, const char *format,
-                     const char *arrformat = NULL, bool warn = false);
+  template <typename DCO>
+  unsigned getValues(DCO &dco, const char *format, const char *arrformat = NULL,
+                     bool warn = false);
 
   /** Retrieve a single value from the interface into a compatible object.
 
@@ -730,6 +753,50 @@ bool GtkGladeWindow::setValue(const T &value, const char *name, bool warn)
   boost::any _v = value;
   auto res = _setValue(name, name, _v, warn);
   return res;
+}
+
+// claim there is a specialized version
+template <>
+unsigned GtkGladeWindow::getValues<CommObjectWriter>(CommObjectWriter &cow,
+                                                     const char *format,
+                                                     const char *arrformat,
+                                                     bool warn);
+
+// claim there is a specialized version
+template <>
+unsigned GtkGladeWindow::getValues<DCOWriter>(DCOWriter &cow,
+                                              const char *format,
+                                              const char *arrformat, bool warn);
+
+// the generic version
+template <typename DCO>
+unsigned GtkGladeWindow::getValues(DCO &dco, const char *format,
+                                   const char *arrformat, bool warn)
+{
+  CommObjectWriter cow(dco);
+  return GtkGladeWindow::getValues(cow, format, arrformat, warn);
+}
+
+// claim there is a specialized version
+template <>
+unsigned GtkGladeWindow::setValues<CommObjectReader>(CommObjectReader &cow,
+                                                     const char *format,
+                                                     const char *arrformat,
+                                                     bool warn);
+
+// claim there is a specialized version
+template <>
+unsigned GtkGladeWindow::setValues<DCOReader>(DCOReader &cow,
+                                              const char *format,
+                                              const char *arrformat, bool warn);
+
+// the generic version
+template <typename DCO>
+unsigned GtkGladeWindow::setValues(DCO &dco, const char *format,
+                                   const char *arrformat, bool warn)
+{
+  CommObjectReader cor(dco);
+  return GtkGladeWindow::setValues(cor, format, arrformat, warn);
 }
 
 DUECA_NS_END

@@ -14,7 +14,6 @@
 */
 
 #pragma once
-#define varvector_hxx
 #include <dueca_ns.h>
 #include <CommObjectTraits.hxx>
 #include <PackTraits.hxx>
@@ -308,6 +307,8 @@ template <typename D>
 struct dco_nested<varvector<D>> : public dco_nested<D> {};
 
 DUECA_NS_END;
+#define varvector_hxx
+#include <msgpack.hxx>
 
 MSGPACKUS_NS_START;
 template <typename S, typename T>

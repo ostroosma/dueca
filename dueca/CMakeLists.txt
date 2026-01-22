@@ -35,7 +35,7 @@ set(DUECASOURCES
   AmorphStore.hxx Arena.cxx Arena.hxx ArenaPool.cxx ArenaPool.hxx
   ChannelIdList.cxx ChannelManager.cxx ChannelOrganiser.cxx
   ClockTime.cxx Condition.cxx DataSetConverter.cxx
-  DataSetSubsidiary.hxx Dstring.cxx EntityManager.cxx EntityState.cxx
+  DataSetSubsidiary.hxx Dstring.cxx EntityManager.cxx 
   Environment.cxx Event.hxx EventAccessToken.hxx Exception.cxx
   GenericCallback.cxx GenericEvent.cxx GenericPacker.cxx
   GenericToken.cxx GuileStart.hxx CyclicInt.cxx MemberCall.hxx
@@ -86,6 +86,7 @@ set(DUECASOURCES
   UCEntryConfigurationChange.hxx UCEntryConfigurationChange.cxx
   UCallbackOrActivity.hxx UCallbackOrActivity.cxx
   ManualTriggerPuller.hxx ManualTriggerPuller.cxx
+  ReferenceHolder.hxx ReferenceHolder.cxx
   )
 
 
@@ -113,6 +114,7 @@ set(STARTSOURCESSCHEME
 
 set(STARTSOURCESPYTHON
 
+  ReferenceHolderPython.hxx ReferenceHolderPython.cxx
   ArgListProcessor.cxx InitPython.cxx
   CreationCenter_Python.hxx TypeCreator.cxx
   PythonScripting.cxx PythonScripting.hxx)
@@ -125,7 +127,7 @@ set(INSTALLHEADERS
   Activity.hxx AmorphStore.hxx Arena.hxx ArenaPool.hxx Callback.hxx
   Callback.ixx CallbackWithId.hxx ClockTime.hxx Condition.hxx
   DataSetConverter.hxx DataSetSubsidiary.hxx visibility.h Dstring.hxx
-  Entity.hxx EntityState.hxx Environment.hxx Event.hxx
+  Entity.hxx Environment.hxx Event.hxx
   EventAccessToken.hxx Exception.hxx GenericCallback.hxx
   GenericEvent.hxx GenericToken.hxx GenericVarIO.hxx MemberCall.hxx
   Module.hxx ModuleCreator.hxx NamedChannel.hxx NamedObject.hxx
@@ -172,7 +174,7 @@ set(INSTALLHEADERS
   msgpack-unstream-iter.hxx msgpack-unstream-iter.ixx
   ListElementAllocator.hxx DCOtypeJSON.hxx undebug.h
   AssociateObject.hxx EasyId.hxx dcoprint.hxx fix_optional.hxx
-  ManualTriggerPuller.hxx
+  ManualTriggerPuller.hxx ReferenceHolder.hxx ReferenceHolderPython.hxx
 )
 # fix_optional.hxx
 

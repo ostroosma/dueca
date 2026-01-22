@@ -74,14 +74,14 @@ initialiseStores(char** area, int* store_status,
   }
 }
 
-void Packer::stopPacking()
+void Packer::stopPacking(TimeTickType tick)
 {
   // my own work
   delete [] store;
   store = NULL;
 
   // my parent's work
-  GenericPacker::stopPacking();
+  GenericPacker::stopPacking(tick);
 }
 
 bool Packer::packOneSet(AmorphStore& store, const PackUnit& c)

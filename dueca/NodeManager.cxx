@@ -11,7 +11,6 @@
         license         : EUPL-1.2
 */
 
-
 #define NodeManager_cc
 
 #include <dueca-conf.h>
@@ -44,9 +43,8 @@
 
 DUECA_NS_START
 
-NodeManager* NodeManager::singleton = NULL;
+NodeManager *NodeManager::singleton = NULL;
 unsigned int static_node_id = 0xffffffff;
-
 
 NodeManager::NodeManager(int this_node, int no_of_nodes) :
   NamedObject(NameSet("dueca", "NodeManager", this_node)),
@@ -56,13 +54,13 @@ NodeManager::NodeManager(int this_node, int no_of_nodes) :
   interval(int(1.0 / Ticker::single()->getTimeGranule() + 0.5)),
   slow_query(false),
   once_in_a_while(20),
-  t_control(getId(), NameSet("dueca", "NodeUpdates", ""),
-            "NodeControlMessage", "", Channel::Events,
-            Channel::OneOrMoreEntries, Channel::ReadReservation),
-  w_control(getId(), NameSet("dueca", "NodeUpdates", ""),
-            "NodeControlMessage", "", Channel::Events,
-            Channel::OneOrMoreEntries, Channel::OnlyFullPacking,
-            Regular, &cb4, no_of_nodes),
+  breaking(false),
+  t_control(getId(), NameSet("dueca", "NodeUpdates", ""), "NodeControlMessage",
+            "", Channel::Events, Channel::OneOrMoreEntries,
+            Channel::ReadReservation),
+  w_control(getId(), NameSet("dueca", "NodeUpdates", ""), "NodeControlMessage",
+            "", Channel::Events, Channel::OneOrMoreEntries,
+            Channel::OnlyFullPacking, Regular, &cb4, no_of_nodes),
   cb1(this, &NodeManager::processMessages),
   cb2(this, &NodeManager::emitQuery),
   cb3(this, &NodeManager::stopDueca),
@@ -86,28 +84,25 @@ NodeManager::NodeManager(int this_node, int no_of_nodes) :
   // specify my activity to be started by the ticker and by
   // receipt of channel information
   process_message.setTrigger(t_control);
-  process_message.switchOn(TimeSpec(0,0));
+  process_message.switchOn(TimeSpec(0, 0));
 }
 
-void NodeManager::writeIsValid(const TimeSpec& ts)
+void NodeManager::writeIsValid(const TimeSpec &ts)
 {
   if (this_node == 0) {
     emit_query.setTrigger(query_alarm);
 
     // emit_query.setTimeSpec(TimeSpec(0, interval));
-    emit_query.switchOn(TimeSpec(0,0));
+    emit_query.switchOn(TimeSpec(0, 0));
   }
 }
 
-NodeManager::~NodeManager()
-{
-
-}
+NodeManager::~NodeManager() {}
 
 bool NodeManager::isDuecaSynced()
 {
   bool is_complete = true;
-  for (int ii = no_of_nodes; ii--; ) {
+  for (int ii = no_of_nodes; ii--;) {
     is_complete &= (node_state[ii] == NodeControlMessage::NodeSynced);
   }
   return is_complete;
@@ -116,9 +111,9 @@ bool NodeManager::isDuecaSynced()
 bool NodeManager::isDuecaComplete()
 {
   bool is_complete = true;
-  for (int ii = no_of_nodes; ii--; ) {
-    is_complete &= (node_state[ii] == NodeControlMessage::NodeJoined)
-      || (node_state[ii] == NodeControlMessage::NodeSynced);
+  for (int ii = no_of_nodes; ii--;) {
+    is_complete &= (node_state[ii] == NodeControlMessage::NodeJoined) ||
+                   (node_state[ii] == NodeControlMessage::NodeSynced);
   }
   return is_complete;
 }
@@ -126,15 +121,15 @@ bool NodeManager::isDuecaComplete()
 bool NodeManager::isDuecaCompleting()
 {
   bool is_completing = true;
-  for (int ii = no_of_nodes; ii--; ) {
-    is_completing &= (node_state[ii] == NodeControlMessage::NodeJoined)
-      || (node_state[ii] == NodeControlMessage::NodeJoining)
-      || (node_state[ii] == NodeControlMessage::NodeSynced);
+  for (int ii = no_of_nodes; ii--;) {
+    is_completing &= (node_state[ii] == NodeControlMessage::NodeJoined) ||
+                     (node_state[ii] == NodeControlMessage::NodeJoining) ||
+                     (node_state[ii] == NodeControlMessage::NodeSynced);
   }
   return is_completing;
 }
 
-void NodeManager::emitQuery(const TimeSpec& time)
+void NodeManager::emitQuery(const TimeSpec &time)
 {
   if (w_control.isValid())
     wrapSendEvent(w_control,
@@ -142,22 +137,22 @@ void NodeManager::emitQuery(const TimeSpec& time)
                   time.getValidityStart());
 }
 
-void NodeManager::stopDueca(const TimeSpec& time)
+void NodeManager::stopDueca(const TimeSpec &time)
 {
   static bool have_to_stop = true;
-  just_stop.switchOff(TimeSpec(0,0));
+  just_stop.switchOff(TimeSpec(0, 0));
   if (have_to_stop) {
     /* DUECA system.
 
        Information on decision to stop the current node.
      */
-    I_SYS("stopping node, at time " << time);
-    CSE.quit();
+    I_SYS("stopping node " << this_node << ", at time " << time.getValidityStart());
+    CSE.quit(time.getValidityStart());
     have_to_stop = false;
   }
 }
 
-void NodeManager::processMessages(const TimeSpec& time)
+void NodeManager::processMessages(const TimeSpec &time)
 {
   bool changed = false;
 
@@ -166,8 +161,8 @@ void NodeManager::processMessages(const TimeSpec& time)
     return;
 
   //  t_control.getNextEvent(e, TimeSpec::end_of_time);
-  DataReader<NodeControlMessage, VirtualJoin>
-    d(t_control, TimeSpec::end_of_time);
+  DataReader<NodeControlMessage, VirtualJoin> d(t_control,
+                                                TimeSpec::end_of_time);
 
   DEB("NodeManager, " << d.data() << ' ' << d.origin());
   // const NodeControlMessage *d = e->getEventData();
@@ -175,7 +170,7 @@ void NodeManager::processMessages(const TimeSpec& time)
   DEB("at time " << time << " ncm " << d.data() << ' ' << d.origin());
 
   // process
-  switch(d.data().state) {
+  switch (d.data().state) {
   case NodeControlMessage::NodeLoose:
   case NodeControlMessage::NodeJoined:
   case NodeControlMessage::NodeJoining:
@@ -199,8 +194,8 @@ void NodeManager::processMessages(const TimeSpec& time)
 
            Information on a state change for a specific node.
          */
-        I_SYS("Node " << int(d.origin().getLocationId()) <<
-              " changed to state " << d.data().state);
+        I_SYS("Node " << int(d.origin().getLocationId()) << " changed to state "
+                      << d.data().state);
 
         DuecaView::single()->refreshNodesView();
       }
@@ -212,13 +207,20 @@ void NodeManager::processMessages(const TimeSpec& time)
     break;
 
   case NodeControlMessage::NodeQuery:
-    if (!w_control.isValid()) break;
-    if (isDuecaComplete() && Ticker::single()->isSynced()) {
+    if (!w_control.isValid())
+      break;
+    if (breaking) {
+      wrapSendEvent(w_control,
+                    new NodeControlMessage(NodeControlMessage::NodeBreaking),
+                    time.getValidityStart());
+    }
+    else if (isDuecaComplete() && Ticker::single()->isSynced()) {
       wrapSendEvent(w_control,
                     new NodeControlMessage(NodeControlMessage::NodeSynced),
                     time.getValidityStart());
       DEB1("replying NodeSynced");
-    } else if (isDuecaCompleting()) {
+    }
+    else if (isDuecaCompleting()) {
       wrapSendEvent(w_control,
                     new NodeControlMessage(NodeControlMessage::NodeJoined),
                     time.getValidityStart());
@@ -241,14 +243,14 @@ void NodeManager::processMessages(const TimeSpec& time)
     wrapSendEvent(w_control,
                   new NodeControlMessage(NodeControlMessage::NodeBreaking),
                   time.getValidityStart());
-
+    breaking = true;
     just_stop.setTrigger(*Ticker::single());
     just_stop.switchOn(time);
     /* DUECA system.
 
        Information on a scheduled node stop.
      */
-    I_SYS("scheduling node stop at " << time);
+    I_SYS("Node " << this_node << " scheduling node stop at " << time.getValidityStart());
     break;
 
   case NodeControlMessage::Emergency:
@@ -290,7 +292,7 @@ void NodeManager::processMessages(const TimeSpec& time)
 void NodeManager::breakUp()
 {
   TimeTickType stop_time = SimTime::getTimeTick() +
-    int(3.0 / Ticker::single()->getTimeGranule() + 0.5);
+                           int(3.0 / Ticker::single()->getTimeGranule() + 0.5);
 
   ScriptInterpret::single()->writeQuit();
   wrapSendEvent(w_control,
@@ -322,21 +324,16 @@ const vstring NodeManager::getNodeName(query_iterator i) const
   st << "node " << i << std::ends;
   return vstring(st.str());
 #else
-  char cbuf[10]; ostrstream st(cbuf, 10);
+  char cbuf[10];
+  ostrstream st(cbuf, 10);
   st << "node " << i << '\000';
   return vstring(cbuf);
 #endif
 }
 
-const char* const NodeManager::getNodeStatus(query_iterator i) const
+const char *const NodeManager::getNodeStatus(query_iterator i) const
 {
   return getString(node_state[i]);
 }
 
 DUECA_NS_END
-
-
-
-
-
-

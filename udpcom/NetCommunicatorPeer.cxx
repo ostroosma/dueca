@@ -206,6 +206,11 @@ void NetCommunicatorPeer::_oneCycle(Activity &activity)
        */
       W_NET("Data receive timeout, cycle " << message_cycle);
 
+      // if we were commanded to stop, stop right now
+      if (stop_commanded) {
+        last_run_tick = 0U;
+      }
+
       // check up on master instructions, maybe a peer dropped out
       if (readConfigSocket(false) > 0) {
         decodeConfigData();
@@ -588,7 +593,7 @@ void NetCommunicatorPeer::clearConnections()
   /* DUECA network.
 
      Information that the connection will be broken as planned. */
-  I_NET("undoing connection");
+  I_NET("NetCommunicatorPeer undoing connections");
 
   resetClientConfiguration();
 
