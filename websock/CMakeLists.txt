@@ -10,8 +10,17 @@ find_package(DuecaCodegen)
 
 # optionally for websocket over ssl
 pkg_check_modules(LIBSSL openssl REQUIRED)
-find_package(Boost 1.60 COMPONENTS system filesystem REQUIRED)
-if (${CMAKE_VERSION} VERSION_LESS "3.14.0")
+
+# boost 1.89 no longer needs system as library
+find_package(Boost 1.89 COMPONENTS filesystem)
+
+# older boost? then try and require system + filesystem
+if(NOT Boost_FOUND)
+  find_package(Boost 1.60 COMPONENTS system filesystem REQUIRED)
+endif()
+
+
+if(${CMAKE_VERSION} VERSION_LESS "3.14.0")
 
   # compile checks fail for this cmake
   find_file(HAVE_SIMPLE_WEBSOCKET_SERVER_SERVER_WS_HPP
@@ -43,24 +52,24 @@ else()
     HAVE_SIMPLE_WEB_SERVER_SERVER_HTTPS_HPP)
 endif()
 
-if (NOT HAVE_SIMPLE_WEBSOCKET_SERVER_SERVER_WS_HPP)
+if(NOT HAVE_SIMPLE_WEBSOCKET_SERVER_SERVER_WS_HPP)
   message(FATAL_ERROR "Could not find simple-websocket-server/server_ws.hpp")
 endif()
-if (NOT HAVE_SIMPLE_WEBSOCKET_SERVER_SERVER_WSS_HPP)
+if(NOT HAVE_SIMPLE_WEBSOCKET_SERVER_SERVER_WSS_HPP)
   message(FATAL_ERROR "Could not find simple-websocket-server/server_wss.hpp")
 endif()
-if (NOT HAVE_SIMPLE_WEB_SERVER_SERVER_HTTP_HPP)
+if(NOT HAVE_SIMPLE_WEB_SERVER_SERVER_HTTP_HPP)
   message(FATAL_ERROR "Could not find simple-web-server/server_http.hpp")
 endif()
-if (NOT HAVE_SIMPLE_WEB_SERVER_SERVER_HTTPS_HPP)
+if(NOT HAVE_SIMPLE_WEB_SERVER_SERVER_HTTPS_HPP)
   message(FATAL_ERROR "Could not find simple-web-server/server_https.hpp")
 endif()
 
 mylinker_arguments(OUTPUT WEBSOCK_BOOST_LIBRARIES
-   LIBLIST ${Boost_LIBRARIES})
+  LIBLIST ${Boost_LIBRARIES})
 
 set(DCOSOURCES
-  ConfigFileData.dco  ConfigFileRequest.dco  NameSizeDate.dco)
+  ConfigFileData.dco ConfigFileRequest.dco NameSizeDate.dco)
 
 set(SOURCES
 
@@ -108,4 +117,3 @@ configure_file(dueca-websock.pc.in dueca-websock.pc @ONLY)
 install(FILES
   ${CMAKE_CURRENT_BINARY_DIR}/dueca-websock.pc
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
-
